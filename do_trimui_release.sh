@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# trimui.portmaster.zip: PortMaster as a TrimUI app.
+# trimui.volkyport.zip: Volkyport as a TrimUI app.
 #
-#   ./do_trimui_release.sh            from dist/PortMaster.zip (./do_release.sh first)
-#   ./do_trimui_release.sh stable  from the latest stable PortMaster.zip on GitHub
+#   ./do_trimui_release.sh            from dist/Volkyport.zip (./do_release.sh first)
+#   ./do_trimui_release.sh stable  from the latest stable Volkyport.zip on GitHub
 #
-# Writes dist/trimui.portmaster.zip.
+# Writes dist/trimui.volkyport.zip.
 
 set -euo pipefail
 
@@ -19,29 +19,29 @@ trap 'rm -rf "$BUILD_DIR"' EXIT
 cd "$BUILD_DIR"
 
 if [[ "${1:-}" == "stable" ]]; then
-  curl -fL -o version.json "https://github.com/PortsMaster/PortMaster-GUI/releases/latest/download/version.json"
-  curl -fL -o PortMaster.zip "$(jq -r '.stable.url' version.json)"
-  PORTMASTER_ZIP="$BUILD_DIR/PortMaster.zip"
+  curl -fL -o version.json "https://github.com/Volkybaba/PortMaster-GUI/releases/latest/download/version.json"
+  curl -fL -o Volkyport.zip "$(jq -r '.stable.url' version.json)"
+  VOLKYPORT_ZIP="$BUILD_DIR/Volkyport.zip"
 else
-  PORTMASTER_ZIP="$DIST_DIR/PortMaster.zip"
+  VOLKYPORT_ZIP="$DIST_DIR/Volkyport.zip"
 fi
 
-if [[ ! -f "$PORTMASTER_ZIP" ]]; then
-  echo "Missing $PORTMASTER_ZIP, run ./do_release.sh first."
+if [[ ! -f "$VOLKYPORT_ZIP" ]]; then
+  echo "Missing $VOLKYPORT_ZIP, run ./do_release.sh first."
   exit 255
 fi
 
-mkdir -p Apps/PortMaster
+mkdir -p Apps/Volkyport
 
 (
-  cd Apps/PortMaster
-  unzip -q "$PORTMASTER_ZIP"
+  cd Apps/Volkyport
+  unzip -q "$VOLKYPORT_ZIP"
 
-  cd PortMaster
-  rm -f PortMaster.sh
+  cd Volkyport
+  rm -f Volkyport.sh
 
   cp trimui/control.txt control.txt
-  cp trimui/PortMaster.txt ../launch.sh
+  cp trimui/Volkyport.txt ../launch.sh
   cp trimui/config.json ../config.json
   cp trimui/icon.png ../icon.png
 
@@ -50,6 +50,6 @@ mkdir -p Apps/PortMaster
 )
 
 mkdir -p "$DIST_DIR"
-rm -f "$DIST_DIR/trimui.portmaster.zip"
-zip -9qr "$DIST_DIR/trimui.portmaster.zip" Apps/
-echo "Built $DIST_DIR/trimui.portmaster.zip"
+rm -f "$DIST_DIR/trimui.volkyport.zip"
+zip -9qr "$DIST_DIR/trimui.volkyport.zip" Apps/
+echo "Built $DIST_DIR/trimui.volkyport.zip"

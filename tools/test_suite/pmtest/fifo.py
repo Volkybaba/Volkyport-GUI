@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# A client for pugwash's fifo_control, the protocol PortMasterDialog.txt speaks: one
+# A client for pugwash's fifo_control, the protocol VolkyportDialog.txt speaks: one
 # command per line on a named pipe, arguments separated by \1, the answer in a "done"
 # file that says WAIT until the command has finished.
 #
@@ -32,7 +32,7 @@ class Dialog:
 
     def start(self, *options, timeout=180):
         """
-        Starts `pugwash fifo_control`, options as for PortMasterDialogInit
+        Starts `pugwash fifo_control`, options as for VolkyportDialogInit
         (eg: "--no-check", "--no-harbour"). True once it answers.
         """
         self.stop()
@@ -47,7 +47,7 @@ class Dialog:
         if self.env is not None:
             env = dict(self.env)
         else:
-            ## As PortMasterDialog.txt does.
+            ## As VolkyportDialog.txt does.
             env = dict(os.environ)
             env.setdefault("PYSDL2_DLL_PATH", "/usr/lib")
 

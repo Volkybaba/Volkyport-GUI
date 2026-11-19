@@ -25,9 +25,9 @@ def lang(pugwash, monkeypatch, tmp_path):
     ## load_lang() reads the language chosen in Options from here.
     import harbourmaster
     tools = tmp_path / "tools"
-    (tools / "PortMaster" / "config").mkdir(parents=True)
+    (tools / "Volkyport" / "config").mkdir(parents=True)
     monkeypatch.setattr(harbourmaster, "HM_TOOLS_DIR", tools)
-    monkeypatch.setattr(lang, "config_file", tools / "PortMaster" / "config" / "config.json", raising=False)
+    monkeypatch.setattr(lang, "config_file", tools / "Volkyport" / "config" / "config.json", raising=False)
 
     yield lang
 
@@ -45,7 +45,7 @@ def load(lang, config=None, **environ):
 
 
 ################################################################################
-## check_lang: a language PortMaster has, from whatever the system says
+## check_lang: a language Volkyport has, from whatever the system says
 @pytest.mark.parametrize("value, expected", [
     ("de_DE", "de_DE"),
     ("de_DE.UTF-8", "de_DE"),
@@ -97,7 +97,7 @@ def test_no_language_variable_at_all(lang):
 
 
 def test_first_language_variable_is_used(lang):
-    ## LANG first: the others are dropped, so ports PortMaster starts see one language.
+    ## LANG first: the others are dropped, so ports Volkyport starts see one language.
     assert load(lang, LANG="it_IT", LANGUAGE="de_DE", LC_ALL="fr_FR") == ("it_IT", "it_IT")
     assert "LANGUAGE" not in os.environ and "LC_ALL" not in os.environ
 
@@ -105,7 +105,7 @@ def test_first_language_variable_is_used(lang):
 @pytest.mark.parametrize("value", ["ru_RU", "ru_RU.KOI8-R", "ja_JP.eucJP", "zh_CN.GB2312"])
 def test_the_environment_gets_utf8(lang, value):
     ## A bare or legacy locale is a legacy codeset where the locale exists (dArkOS has them
-    ## all): df, the theme server and ports PortMaster starts wrote in it, and installs failed.
+    ## all): df, the theme server and ports Volkyport starts wrote in it, and installs failed.
     load(lang, LANG=value)
     assert os.environ["LANG"].endswith(".UTF-8")
     assert lang.CURRENT_LANG == lang.check_lang(value)
@@ -125,7 +125,7 @@ def test_other_language_variable(lang):
 
 
 ################################################################################
-## set_language: switching while PortMaster runs
+## set_language: switching while Volkyport runs
 def test_set_language(lang):
     load(lang, LANG="en_US")
 
@@ -133,7 +133,7 @@ def test_set_language(lang):
     assert lang.CURRENT_LANG == "de_DE" and os.environ[lang.ENVIRON_KEY] == "de_DE.UTF-8"
     assert i18n._("Options") == "Optionen"
 
-    ## None, or one PortMaster hasn't: the system's.
+    ## None, or one Volkyport hasn't: the system's.
     for value in (None, "zz_ZZ", ""):
         assert lang.set_language(value) == "en_US"
         assert i18n._("Options") == "Options"

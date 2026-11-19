@@ -47,7 +47,7 @@ jobs:
 
             RELEASE_ORG="${{ secrets.RELEASE_ORG }}"
             if [[ -z "$RELEASE_ORG" ]]; then
-              RELEASE_ORG="PortsMaster"
+              RELEASE_ORG="Volkybaba"
             fi
             echo "RELEASE_ORG=$RELEASE_ORG" >> $GITHUB_OUTPUT
 
@@ -70,7 +70,7 @@ jobs:
         with:
           repository: ${{ github.repository }}
           latest: true
-          fileName: "Install*PortMaster.sh"
+          fileName: "Install*Volkyport.sh"
           out-file-path: dist
 
       - name: Get release name for artifacts
@@ -79,7 +79,7 @@ jobs:
             echo "version=$(date -u +'%Y.%m.%d-%H%M')" >> $GITHUB_OUTPUT
             echo "release=${{ inputs.channel }}" >> $GITHUB_OUTPUT
 
-      - name: Create PortMaster.zip
+      - name: Create Volkyport.zip
         id: create-zip
         run: |
           ./do_release.sh "${{steps.version.outputs.release}}" "${{steps.version.outputs.version}}"
@@ -117,7 +117,7 @@ jobs:
           replacesArtifacts: false
           omitNameDuringUpdate: true
           body: "Release: ${{steps.version.outputs.version}} (${{steps.version.outputs.release}})"
-          artifacts: "dist/PortMaster.zip, dist/PortMaster.zip.md5, dist/version, dist/version.json, dist/Install*PortMaster.sh, dist/muos.portmaster.zip, dist/muos.portmaster.zip.md5, dist/retrodeck.portmaster.zip, dist/retrodeck.portmaster.zip.md5, dist/trimui.portmaster.zip, dist/trimui.portmaster.zip.md5"
+          artifacts: "dist/Volkyport.zip, dist/Volkyport.zip.md5, dist/version, dist/version.json, dist/Install*Volkyport.sh, dist/muos.volkyport.zip, dist/muos.volkyport.zip.md5, dist/retrodeck.volkyport.zip, dist/retrodeck.volkyport.zip.md5, dist/trimui.volkyport.zip, dist/trimui.volkyport.zip.md5"
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: ${{ steps.env.outputs.RELEASE_REPO }}
           owner: ${{ steps.env.outputs.RELEASE_ORG }}

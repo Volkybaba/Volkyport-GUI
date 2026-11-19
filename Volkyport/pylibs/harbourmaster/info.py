@@ -1,0 +1,471 @@
+
+# SPDX-License-Identifier: MIT
+
+# System imports
+import pathlib
+import re
+
+from pathlib import Path
+
+# Included imports
+
+from loguru import logger
+
+# Module imports
+from .config import HM_GENRES
+from .util import json_safe_load, json_safe_loads, timeit
+
+################################################################################
+## Port Information
+PORT_INFO_ROOT_ATTRS = {
+    'version': 4,
+    'name': None,
+    'items': None,
+    'items_opt': None,
+    'attr': {},
+    }
+
+
+PORT_INFO_ATTR_ATTRS = {
+    'title': "",
+    'desc': "",
+    'inst': "",
+    'genres': [],
+    'porter': [],
+    'image': {},
+    'rtr': False,
+    'exp': False,
+    'runtime': [],
+    'min_glibc': "",
+    'reqs': [],
+    'arch': [],
+    }
+
+
+PORT_INFO_OPTIONAL_ROOT_ATTRS = [
+    'status',
+    'files',
+    'source',
+    ]
+
+
+PORT_INFO_LIST_ATTRS = ('genres', 'porter', 'runtime', 'reqs', 'arch')
+PORT_INFO_TEXT_ATTRS = ('title', 'desc', 'inst', 'min_glibc')
+
+## ports.json's "source" block: dropped when they aren't these types, so the defaults are used.
+PORT_INFO_SOURCE_TEXT = ('md5', 'url', 'date_added', 'date_updated', 'release_id')
+PORT_INFO_SOURCE_NUMBERS = ('size', 'downloads')
+PORT_INFO_STATUS_TEXT = ('source', 'status')
+
+## The longest file name most file systems allow, in bytes.
+NAME_MAX = 255
+
+
+def _clean_attr_types(attr, source_name):
+    """
+    port.json files are written by hand, so coerce what we sensibly can into the
+    types the rest of Volkyport expects (lists of strings, strings, a dict of images).
+    """
+    for key in PORT_INFO_LIST_ATTRS:
+        value = attr.get(key)
+
+        if value is None:
+            value = []
+
+        elif isinstance(value, str):
+            value = [value]
+
+        elif isinstance(value, (list, tuple)):
+            value = [item for item in value if isinstance(item, str)]
+
+        else:
+            logger.warning(f"port_info['attr'][{key!r}] has a bad value in {source_name!r}: {value!r}")
+            value = []
+
+        attr[key] = value
+
+    for key in PORT_INFO_TEXT_ATTRS:
+        value = attr.get(key)
+
+        if value is None:
+            attr[key] = ""
+
+        elif not isinstance(value, str):
+            attr[key] = str(value)
+
+    image = attr.get('image')
+    if isinstance(image, str):
+        attr['image'] = {'screenshot': image}
+
+    elif not isinstance(image, dict):
+        attr['image'] = {}
+
+    for key in ('rtr', 'exp'):
+        attr[key] = bool(attr.get(key, False))
+
+    ## Compared with the device's glibc version, so it has to be one: "2.31".
+    if not re.fullmatch(r'\d+(\.\d+)*', attr['min_glibc'].strip()):
+        if attr['min_glibc'].strip() != "":
+            logger.warning(f"port_info['attr']['min_glibc'] is not a version in {source_name!r}: {attr['min_glibc']!r}")
+
+        attr['min_glibc'] = ""
+
+    ## Runtimes are file names in the libs folder.
+    attr['runtime'] = [runtime for runtime in attr['runtime'] if is_safe_file_name(runtime)]
+
+
+def is_safe_file_name(name):
+    """A plain file name, with no folders in it."""
+    return (
+        isinstance(name, str) and name.strip() not in ("", ".", "..") and
+        not any(c in name for c in '/\\\0') and
+        len(name.encode('utf-8', 'surrogatepass')) <= NAME_MAX)
+
+
+def _clean_root_types(port_info, source_name):
+    """
+    The same for the root keys: everything that reads port info expects these types,
+    and a port.json that isn't right stopped Volkyport starting.
+    """
+    if not isinstance(port_info['name'], str) or port_info['name'].strip() == "":
+        if port_info['name'] is not None:
+            logger.warning(f"port_info['name'] has a bad value in {source_name!r}: {port_info['name']!r}")
+
+        port_info['name'] = None
+
+    status = port_info.get('status')
+    if 'status' in port_info and not isinstance(status, dict):
+        logger.warning(f"port_info['status'] has a bad value in {source_name!r}: {status!r}")
+        del port_info['status']
+
+    elif isinstance(status, dict):
+        status = port_info['status'] = dict(status)
+        for key in PORT_INFO_STATUS_TEXT:
+            if key in status and not isinstance(status[key], str):
+                del status[key]
+
+        if not isinstance(status.get('md5'), str):
+            status['md5'] = None
+
+    source = port_info.get('source')
+    if 'source' in port_info and not isinstance(source, dict):
+        logger.warning(f"port_info['source'] has a bad value in {source_name!r}: {source!r}")
+        del port_info['source']
+
+    elif isinstance(source, dict):
+        source = port_info['source'] = dict(source)
+        for key in PORT_INFO_SOURCE_TEXT:
+            if key in source and not isinstance(source[key], str):
+                del source[key]
+
+        for key in PORT_INFO_SOURCE_NUMBERS:
+            if key in source and (isinstance(source[key], bool) or not isinstance(source[key], int) or source[key] < 0):
+                del source[key]
+
+    ## {"port.json": "port/port.json", item: item or [items]}: uninstalling deletes the values.
+    files = port_info.get('files')
+    if 'files' in port_info and files is not None:
+        if not isinstance(files, dict):
+            logger.warning(f"port_info['files'] has a bad value in {source_name!r}: {files!r}")
+            files = {}
+
+        clean_files = {}
+        for key, value in files.items():
+            values = value if isinstance(value, list) else [value]
+            values = [item for item in values if is_safe_port_item(item)]
+
+            if not is_safe_port_item(key) or len(values) == 0:
+                logger.warning(f"port_info['files'] has a bad entry in {source_name!r}: {key!r}: {value!r}")
+                continue
+
+            clean_files[key] = values[0] if len(values) == 1 else values
+
+        port_info['files'] = clean_files
+
+
+def is_safe_port_item(item):
+    """
+    A port's item (a script or folder in the ports folder) is a plain relative name:
+    uninstalling deletes it, so `..` in it would delete things outside the ports folder.
+    """
+    if not isinstance(item, str) or item.strip() in ("", ".", "./"):
+        return False
+
+    if item.startswith(('/', '\\')) or '\0' in item:
+        return False
+
+    parts = item.replace('\\', '/').split('/')
+    return not any(part == '..' or len(part.encode('utf-8', 'surrogatepass')) > NAME_MAX for part in parts)
+
+
+def port_info_load(raw_info, source_name=None, do_default=False):
+    if isinstance(raw_info, pathlib.PurePath):
+        source_name = str(raw_info)
+
+        with raw_info.open('r') as fh:
+            info = json_safe_load(fh)
+            if info is None or not isinstance(info, dict):
+                if do_default:
+                    info = {}
+                else:
+                    return None
+
+    elif isinstance(raw_info, str):
+        if raw_info.strip().startswith('{') and raw_info.strip().endswith('}'):
+            if source_name is None:
+                source_name = "<str>"
+
+            info = json_safe_loads(raw_info)
+            if info is None or not isinstance(info, dict):
+                if do_default:
+                    info = {}
+                else:
+                    return None
+
+        elif Path(raw_info).is_file():
+            source_name = raw_info
+
+            with open(raw_info, 'r') as fh:
+                info = json_safe_load(fh)
+                if info is None or not isinstance(info, dict):
+                    if do_default:
+                        info = {}
+                    else:
+                        return None
+
+        else:
+            if source_name is None:
+                source_name = "<str>"
+
+            logger.error(f'Unable to load port_info from {source_name!r}: {raw_info!r}')
+            if do_default:
+                info = {}
+            else:
+                return None
+
+    elif isinstance(raw_info, dict):
+        if source_name is None:
+            source_name = "<dict>"
+
+        info = raw_info
+
+    else:
+        logger.error(f'Unable to load port_info from {source_name!r}: {raw_info!r}')
+        if do_default:
+            info = {}
+        else:
+            return None
+
+    # This is a bizzare one, it turns out some versions are strings?!
+    if isinstance(info.get('version', None), str):
+        try:
+            info['version'] = int(info['version'])
+
+        except ValueError:
+            pass
+
+    if ('version' in info and not isinstance(info['version'], int)) or not isinstance(info.get('attr', {}), dict):
+        logger.error(f'Unable to load port_info with a bad "version" or "attr" from {source_name!r}: {info}')
+
+        if do_default:
+            info = {}
+        else:
+            return None
+
+    if 'version' in info and info['version'] > PORT_INFO_ROOT_ATTRS['version']:
+        logger.error(f'Unable to load port_info with newer version from {source_name!r}: {info}')
+
+        if do_default:
+            info = {}
+        else:
+            return None
+
+    if info.get('version', None) == 1:
+        # Update older json version to the newer one.
+        info = info.copy()
+        if 'source' in info and isinstance(info['source'], str):
+            info['name'] = info['source'].rsplit('/', 1)[-1]
+            del info['source']
+
+        info['version'] = 2
+
+        if info.get('md5', None) is not None:
+            info['status'] = {
+                'source': "Unknown",
+                'md5': info['md5'],
+                'status': "Unknown",
+                }
+            del info['md5']
+
+    if info.get('version', None) == 2:
+        info['version'] = 3
+
+    # WHOOPS! :O
+    if info.get('attr', {}).get('runtime', None) == "blank":
+        info['attr']['runtime'] = None
+
+    if isinstance(info.get('attr', {}).get('porter'), str):
+        info['attr']['porter'] = [info['attr']['porter']]
+
+    if isinstance(info.get('attr', {}).get('reqs', None), dict):
+        info['attr']['reqs'] = [
+            key
+            for key in info['attr']['reqs']]
+
+    # Version 3 to 4
+    if info.get('version', None) == 3:
+        info['version'] = 4
+
+        ## Hand-written port.json files leave out "attr" or its "runtime"; filled in below.
+        if 'runtime' in info.get('attr', {}):
+            if info['attr']['runtime'] is None:
+                info['attr']['runtime'] = []
+
+            elif isinstance(info['attr']['runtime'], str):
+                info['attr']['runtime'] = [ info['attr']['runtime'] ]
+
+    # Catch errors because who fucking uses version numbers.
+    if info.get('attr', {}).get('runtime', []) == None:
+        info['attr']['runtime'] = []
+
+    if isinstance(info.get('attr', {}).get('runtime', []), str):
+        info['attr']['runtime'] = [ info['attr']['runtime'] ]
+
+    # This strips out extra stuff
+    port_info = {}
+
+    for attr, attr_default in PORT_INFO_ROOT_ATTRS.items():
+        if isinstance(attr_default, (dict, list)):
+            attr_default = attr_default.copy()
+
+        port_info[attr] = info.get(attr, attr_default)
+
+    for attr, attr_default in PORT_INFO_ATTR_ATTRS.items():
+        if isinstance(attr_default, (dict, list)):
+            attr_default = attr_default.copy()
+
+        port_info['attr'][attr] = info.get('attr', {}).get(attr, attr_default)
+
+    _clean_attr_types(port_info['attr'], source_name)
+
+    if port_info['items'] is not None and not isinstance(port_info['items'], list):
+        logger.warning(f"port_info['items'] is not a list in {source_name!r}: {port_info['items']!r}")
+        port_info['items'] = None
+
+    for attr in PORT_INFO_OPTIONAL_ROOT_ATTRS:
+        if attr in info:
+            port_info[attr] = info[attr]
+
+    if port_info['items_opt'] is not None and not isinstance(port_info['items_opt'], list):
+        logger.warning(f"port_info['items_opt'] is not a list in {source_name!r}: {port_info['items_opt']!r}")
+        port_info['items_opt'] = None
+
+    for key in ('items', 'items_opt'):
+        if not isinstance(port_info[key], list):
+            continue
+
+        for item in port_info[key]:
+            if not is_safe_port_item(item):
+                logger.error(f"port_info[{key!r}] contains bad name {item!r}")
+
+        port_info[key] = [item for item in port_info[key] if is_safe_port_item(item)]
+
+    if port_info['items_opt'] == []:
+        port_info['items_opt'] = None
+
+    if isinstance(port_info['attr'].get('genres', None), list):
+        genres = port_info['attr']['genres']
+        port_info['attr']['genres'] = []
+
+        for genre in genres:
+            if genre.casefold() in HM_GENRES:
+                port_info['attr']['genres'].append(genre.casefold())
+
+    _clean_root_types(port_info, source_name)
+
+    return port_info
+
+
+@timeit
+def port_info_merge(port_info, other):
+    if isinstance(other, (str, pathlib.PurePath)):
+        other_info = port_info_load(other)
+    elif isinstance(other, dict):
+        other_info = other
+    else:
+        logger.error(f"Unable to merge {other!r}")
+        return None
+
+    for attr, attr_default in PORT_INFO_ROOT_ATTRS.items():
+        if attr == 'attr':
+            continue
+
+        value_a = port_info[attr]
+        value_b = other_info[attr]
+
+        if value_a is None or value_a == "" or value_a == []:
+            port_info[attr] = value_b
+            continue
+
+        if value_b in (True, False) and value_a in (True, False, None):
+            port_info[attr] = value_b
+            continue
+
+        if isinstance(value_b, str) and value_a in ("", None):
+            port_info[attr] = value_b
+            continue
+
+        if isinstance(value_b, list) and value_a in ([], None):
+            port_info[attr] = value_b[:]
+            continue
+
+        if isinstance(value_b, dict) and value_a in ({}, None):
+            port_info[attr] = value_b.copy()
+            continue
+
+    for attr in PORT_INFO_OPTIONAL_ROOT_ATTRS:
+        if attr not in other_info:
+            continue
+
+        value_a = port_info.get(attr)
+        value_b = other_info[attr]
+
+        if isinstance(value_b, str) and value_a in ("", None):
+            port_info[attr] = value_b
+            continue
+
+        if isinstance(value_b, list) and value_a in ([], None):
+            port_info[attr] = value_b[:]
+            continue
+
+        if isinstance(value_b, dict) and value_a in ({}, None):
+            port_info[attr] = value_b.copy()
+            continue
+
+    for key_b, value_b in other_info['attr'].items():
+        if key_b not in port_info['attr']:
+            continue
+
+        if value_b in (True, False) and port_info['attr'][key_b] in (True, False, None):
+            port_info['attr'][key_b] = value_b
+            continue
+
+        if isinstance(value_b, str) and port_info['attr'][key_b] in ("", None):
+            port_info['attr'][key_b] = value_b
+            continue
+
+        if isinstance(value_b, list) and port_info['attr'][key_b] in ([], None):
+            port_info['attr'][key_b] = value_b[:]
+            continue
+
+        if isinstance(value_b, dict) and port_info['attr'][key_b] in ({}, None):
+            port_info['attr'][key_b] = value_b.copy()
+            continue
+
+    return port_info
+
+
+__all__ = (
+    'port_info_load',
+    'port_info_merge',
+    )

@@ -15,7 +15,7 @@ pytestmark = pytest.mark.sdl
 
 
 class FifoWriter:
-    """What PortMasterDialog.txt does: write a command, wait for the done file to answer."""
+    """What VolkyportDialog.txt does: write a command, wait for the done file to answer."""
     TIMEOUT = 10
 
     def __init__(self, pipe, done):

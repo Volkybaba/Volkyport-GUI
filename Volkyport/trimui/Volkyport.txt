@@ -1,0 +1,10 @@
+#!/bin/sh
+#
+# SPDX-License-Identifier: MIT
+#
+# Launches Volkyport: everything else lives in $controlfolder/utils/vp_launch.txt
+# and trimui/launch_hooks.txt.
+
+controlfolder="/mnt/SDCARD/Apps/Volkyport/Volkyport"
+
+source "$controlfolder/utils/vp_launch.txt" trimui; exit $?

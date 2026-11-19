@@ -1,0 +1,1181 @@
+#!/bin/bash
+#
+# SPDX-License-Identifier: MIT
+#
+# ==============================================================================
+# Volkyport Device Information Provider (Dynamic Modernized v0.2.0)
+# ==============================================================================
+export PATH="$PATH:/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin"
+
+(return 0 2>/dev/null) && SOURCED=1 || SOURCED=0
+
+FORCE_REFRESH=0
+for arg in "$@"; do
+    if [ "$arg" = "-f" ] || [ "$arg" = "--force" ]; then
+        FORCE_REFRESH=1
+    fi
+done
+
+export DEVICE_INFO_VERSION="0.2.9"
+
+# ------------------------------------------------------------------------------
+# 0. DIRECTORY SETUP
+# ------------------------------------------------------------------------------
+if [ -z "$controlfolder" ]; then
+    if [ -n "$PORTMASTER_HOME" ] && [ -d "$PORTMASTER_HOME" ]; then
+        CONTROL_DIR="$PORTMASTER_HOME"
+    else
+        CONTROL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+    fi
+else
+    CONTROL_DIR="$controlfolder"
+fi
+
+if [ -z "$PM_VERSION" ] && [ -f "$CONTROL_DIR/version" ]; then
+    export PM_VERSION="$(tr -d '\r\n' < "$CONTROL_DIR/version" 2>/dev/null)"
+fi
+[ -z "$PM_VERSION" ] && export PM_VERSION="Unknown"
+
+# spruce writes its version, model name and stick count here at every boot (spruce
+# 4b90fb865, nightlies from 2026-10-13 on). Older spruce: the probes and the spruce
+# fallbacks in 3b / 3h below.
+load_spruce_info() {
+    [ "$CFW_NAME" = "spruce" ] && [ -f /tmp/spruce_device_info.env ] || return 0
+    set -a
+    . /tmp/spruce_device_info.env
+    set +a
+}
+
+# ------------------------------------------------------------------------------
+# 1. FAST HOST IDENTITY PROBE (CFW & DEVICE NAME)
+# ------------------------------------------------------------------------------
+export CFW_NAME="Unknown"
+export DEVICE_NAME="Unknown"
+PLY_VERSION=""
+
+if [ -f "/app/bin/retrodeck" ] || [ -f "/app/bin/retrodeck.sh" ] || [ "$FLATPAK_ID" = "net.retrodeck.retrodeck" ]; then
+    export CFW_NAME="RetroDECK"
+elif [ -f "/etc/rocknix-release" ] || [ -f "/storage/.config/rocknix" ] || grep -qi 'rocknix' /etc/os-release /usr/lib/os-release 2>/dev/null; then
+    export CFW_NAME="ROCKNIX"
+elif [ -f "/etc/jelos-release" ] || [ -f "/storage/.config/jelos" ] || grep -qi 'jelos' /etc/os-release /usr/lib/os-release 2>/dev/null; then
+    export CFW_NAME="JELOS"
+elif [ -f "/opt/muos/config/system/version" ] || [ -f "/opt/muos/config/version.txt" ] || [ -d "/opt/muos" ] || grep -qiE '^(ID=muos|NAME=MustardOS)' /etc/os-release 2>/dev/null; then
+    export CFW_NAME="muOS"
+elif [ -d "/mnt/SDCARD/spruce" ]; then
+    export CFW_NAME="spruce"
+elif [ -f "/usr/share/plymouth/themes/text.plymouth" ] && grep -qiE '(darkos|arkos|thera|the r\.a|retrooz)' /usr/share/plymouth/themes/text.plymouth 2>/dev/null; then
+    ## The boot splash title names ArkOS and family, with the version as a date (MMDDYYYY):
+    ## "ArkOS 2.0 (02012025)-3", "dArkOS (05102026)", "dArkOSRE (...)", plus wuMMLe / AeUX
+    ## builds, named as mod_dArkOSRE.txt / "mod_ArkOS wuMMLe.txt" expect.
+    PLY_TITLE="$(grep -a -i -m1 "title=" /usr/share/plymouth/themes/text.plymouth 2>/dev/null | cut -d= -f2- | tr -d '\r')"
+    PLY_LETTERS="$(echo "$PLY_TITLE" | tr -cd 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ' | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+    ## The update number can follow the date, inside or after the brackets: "(02012025)-3" is 02012025-3.
+    PLY_VERSION="$(echo "$PLY_TITLE" | sed -n 's/^.*(\([0-9]\{8\}\)\(-[0-9][0-9]*\)\{0,1\}[^)]*)\(-[0-9][0-9]*\)\{0,1\}.*$/\1\2\3/p')"
+    case "$PLY_LETTERS" in
+        ## " *TheRA RC 1*", "The R.A RC 1": the rest of the title is its version.
+        *thera*)   CFW_NAME="TheRA"
+                   PLY_VERSION="$(echo "$PLY_TITLE" | tr -d '*' | sed -e 's/[Tt][Hh][Ee] *[Rr]\.*[Aa]//' -e 's/^ *//' -e 's/ *$//')" ;;
+        *retrooz*) CFW_NAME="RetroOZ"; PLY_VERSION="" ;;
+        *arkos*)
+            ## One of the names the mod_*.txt files know: titles say more ("dArkOSen" on an RG351MP).
+            case "$(echo "$PLY_TITLE" | cut -d' ' -f1 | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')" in
+                darkosre*) CFW_NAME="dArkOSRE" ;;
+                *darkos*)  CFW_NAME="dArkOS" ;;
+                *)         case "$PLY_LETTERS" in *darkos*) CFW_NAME="dArkOS" ;; *) CFW_NAME="ArkOS" ;; esac ;;
+            esac
+            case "$PLY_LETTERS" in
+                *wummle*) CFW_NAME="$CFW_NAME wuMMLe" ;;
+                *aeux*)   CFW_NAME="$CFW_NAME AeUX" ;;
+            esac
+            ;;
+    esac
+    export CFW_NAME
+elif [ -f "/usr/share/knulli/knulli.version" ] || [ -f "/boot/boot/knulli.board" ] || [ -f "/boot/knulli.board" ] || [ -f "/etc/knulli.version" ] || grep -qi 'knulli' /etc/os-release /usr/lib/os-release 2>/dev/null; then
+    export CFW_NAME="knulli"
+elif [ -f "/etc/retrooz_version" ]; then
+    export CFW_NAME="RetroOZ"
+elif [ -f "/etc/amber_version" ] || [ -f "/etc/amberelec_version" ]; then
+    export CFW_NAME="AmberELEC"
+elif [ -f "/usr/share/batocera/batocera.version" ]; then
+    export CFW_NAME="Batocera.linux"
+elif [ -d "/storage/plumos" ] || [ -f "/etc/plumos-release" ] || grep -qiE '^(ID=plumos|NAME=.*plumOS)' /etc/os-release /usr/lib/os-release 2>/dev/null; then
+    export CFW_NAME="plumOS"
+elif [ -f "/etc/darkos_version" ] || [ -f "/etc/arkos_version" ]; then
+    [ -f "/etc/darkos_version" ] && export CFW_NAME="dArkOS" || export CFW_NAME="ArkOS"
+fi
+
+if [ "$CFW_NAME" = "Unknown" ] && { [ -f "/etc/os-release" ] || [ -f "/usr/lib/os-release" ]; }; then
+    OS_FILE="/etc/os-release"; [ ! -f "$OS_FILE" ] && OS_FILE="/usr/lib/os-release"
+    ## OS_NAME is the distribution's own (UnofficialOS, JELOS) where NAME is the base's or missing.
+    for key in OS_NAME NAME ID; do
+        val="$(grep -E "^${key}=" "$OS_FILE" | head -n1 | cut -d= -f2 | tr -d '"\r')"
+        if [ -n "$val" ]; then CFW_NAME="$val"; break; fi
+    done
+fi
+
+for dfile in \
+    "/opt/muos/device/config/board/name" \
+    "/opt/muos/config/device.txt" \
+    "/boot/boot/knulli.board" \
+    "/boot/knulli.board" \
+    "/userdata/system/knulli.board" \
+    "/boot/boot/batocera.board" \
+    "/boot/batocera.board" \
+    "/var/run/batocera.board" \
+    "/userdata/system/batocera.board" \
+    "/etc/batocera.board" \
+    "$HOME/.config/.CUSTOM_DEVICE" \
+    "$HOME/.config/.DEVICE" \
+    "$HOME/.config/.OS_ARCH" \
+    "/userdata/system/.DEVICE" \
+    "/userdata/system/.CUSTOM_DEVICE" \
+    "/etc/device_model" \
+    "/etc/board"; do
+    if [ -f "$dfile" ]; then
+        DEV_CONTENT="$(head -n1 "$dfile" 2>/dev/null | tr -d '\r\n')"
+        if [ -n "$DEV_CONTENT" ]; then
+            export DEVICE_NAME="$DEV_CONTENT"
+            break
+        fi
+    fi
+done
+
+load_spruce_info
+
+if [ "$DEVICE_NAME" = "Unknown" ]; then
+    if [ -f "/sys/devices/virtual/dmi/id/product_name" ]; then
+        DMI_NAME="$(tr -d '\r\n' < /sys/devices/virtual/dmi/id/product_name 2>/dev/null)"
+        case "$DMI_NAME" in
+            "Galileo") export DEVICE_NAME="Steam Deck OLED" ;;
+            "Jupiter") export DEVICE_NAME="Steam Deck" ;;
+            "ROG Ally"*|"RC71L"*) export DEVICE_NAME="ROG Ally" ;;
+            "83E1"*)   export DEVICE_NAME="Legion Go" ;;
+            "G1618-04"*) export DEVICE_NAME="GPD Win 4" ;;
+            "G1617-01"*) export DEVICE_NAME="GPD Win Mini" ;;
+            *) [ -n "$DMI_NAME" ] && export DEVICE_NAME="$DMI_NAME" ;;
+        esac
+    elif [ -f "/proc/device-tree/model" ]; then
+        export DEVICE_NAME="$(tr -d '\0\r\n' < /proc/device-tree/model 2>/dev/null)"
+    elif [ -f "/sys/firmware/devicetree/base/model" ]; then
+        export DEVICE_NAME="$(tr -d '\0\r\n' < /sys/firmware/devicetree/base/model 2>/dev/null)"
+    fi
+fi
+
+## The alphabet spelled out, here and below: some BusyBox tr builds take [:upper:] as
+## literal characters (the TrimUI Brick's turns spruce into swrlce).
+SAFE_CFW="$(echo "$CFW_NAME" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ /' 'abcdefghijklmnopqrstuvwxyz__')"
+SAFE_DEV="$(echo "$DEVICE_NAME" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ /' 'abcdefghijklmnopqrstuvwxyz__')"
+CACHED_ENV="$CONTROL_DIR/device_info_${SAFE_CFW}_${SAFE_DEV}.env"
+
+# ------------------------------------------------------------------------------
+# 2. FAST-PATH: INSTANT CACHE EXIT (Auto-Invalidates if Version Mismatches)
+# ------------------------------------------------------------------------------
+if [ "$FORCE_REFRESH" -eq 0 ] && [ -f "$CACHED_ENV" ] && [ -s "$CACHED_ENV" ]; then
+    CACHED_VER="$(grep -E '^DEVICE_INFO_VERSION=' "$CACHED_ENV" 2>/dev/null | cut -d= -f2 | tr -d '"\r ')"
+    if [ "$CACHED_VER" = "$DEVICE_INFO_VERSION" ]; then
+        set -a
+        . "$CACHED_ENV"
+        set +a
+        load_spruce_info
+
+        if [ "$SOURCED" -eq 0 ]; then
+            echo "========================================"
+            echo " Volkyport Device Info (Cached: v$DEVICE_INFO_VERSION)"
+            echo "========================================"
+            printf "%-20s: %s\n" "CFW_NAME" "$CFW_NAME"
+            printf "%-20s: %s\n" "CFW_VERSION" "$CFW_VERSION"
+            printf "%-20s: %s\n" "CFW_GLIBC" "$CFW_GLIBC"
+            printf "%-20s: %s\n" "KERNEL_VERSION" "$DEVICE_KERNEL_VERSION"
+            printf "%-20s: %s\n" "DEVICE_NAME" "$DEVICE_NAME"
+            printf "%-20s: %s\n" "DEVICE_CPU" "$DEVICE_CPU"
+            printf "%-20s: %s\n" "DEVICE_ARCH" "$DEVICE_ARCH"
+            printf "%-20s: %s (v%s)\n" "GPU_DRIVER" "$GPU_DRIVER" "$GPU_DRIVER_VERSION"
+            printf "%-20s: %s GB (%s MB)\n" "DEVICE_RAM" "$DEVICE_RAM" "$DEVICE_RAM_MB"
+            printf "%-20s: SWAP=%s, ZRAM=%s\n" "MEMORY_SWAP" "$DEVICE_HAS_SWAP" "$DEVICE_HAS_ZRAM"
+            printf "%-20s: %sx%s (%s:%s) @ %sHz\n" "DISPLAY" "$DISPLAY_WIDTH" "$DISPLAY_HEIGHT" "$ASPECT_X" "$ASPECT_Y" "$DEVICE_REFRESH_RATE"
+            printf "%-20s: %s deg\n" "ORIENTATION" "$DISPLAY_ORIENTATION"
+            printf "%-20s: %s\n" "ANALOG_STICKS" "$ANALOG_STICKS"
+            printf "%-20s: %s\n" "ANALOG_TRIGGERS" "$ANALOG_TRIGGERS"
+            printf "%-20s: %s\n" "DEVICE_TOUCH" "$DEVICE_TOUCH"
+            printf "%-20s: %s\n" "DEVICE_RUMBLE" "$DEVICE_HAS_RUMBLE"
+            printf "%-20s: %s\n" "DEVICE_CAPABILITIES" "$DEVICE_CAPABILITIES"
+            echo "========================================"
+        fi
+
+        return 0 2>/dev/null || exit 0
+    fi
+fi
+
+# ==============================================================================
+# 3. FULL HARDWARE PROBE (Runs when cache is missing, stale, or forced)
+# ==============================================================================
+
+# 3a. Architecture & Multi-lib
+RAW_ARCH="$(uname -m 2>/dev/null)"
+case "$RAW_ARCH" in
+    aarch64|arm64)       export DEVICE_ARCH="aarch64" ;;
+    armv7*|armhf|armv8l) export DEVICE_ARCH="armhf" ;;
+    x86_64|amd64)        export DEVICE_ARCH="x86_64" ;;
+    i*86|x86)            export DEVICE_ARCH="x86" ;;
+    *)                   export DEVICE_ARCH="aarch64" ;;
+esac
+
+export DEVICE_HAS_ARMHF="N"
+export DEVICE_HAS_AARCH64="N"
+export DEVICE_HAS_X86="N"
+export DEVICE_HAS_X86_64="N"
+
+case "$DEVICE_ARCH" in
+    aarch64)
+        export DEVICE_HAS_AARCH64="Y"
+        if [ -d "/lib/arm-linux-gnueabihf" ] || [ -d "/usr/lib/arm-linux-gnueabihf" ] || \
+           [ -d "/lib32" ] || [ -d "/usr/lib32" ] || \
+           [ -f "/lib/ld-linux-armhf.so.3" ] || [ -f "/usr/lib/ld-linux-armhf.so.3" ]; then
+            export DEVICE_HAS_ARMHF="Y"
+        fi
+        ;;
+    armhf)
+        export DEVICE_HAS_ARMHF="Y"
+        ;;
+    x86_64)
+        export DEVICE_HAS_X86_64="Y"
+        if [ -d "/lib/i386-linux-gnu" ] || [ -d "/usr/lib/i386-linux-gnu" ] || \
+           [ -d "/usr/lib32" ] || [ -f "/lib/ld-linux.so.2" ] || [ -f "/usr/lib/ld-linux.so.2" ]; then
+            export DEVICE_HAS_X86="Y"
+        fi
+        ;;
+    x86)
+        export DEVICE_HAS_X86="Y"
+        ;;
+esac
+
+# 3b. CFW Version Resolution
+export CFW_VERSION="Unknown"
+if [ "$CFW_NAME" = "RetroDECK" ]; then
+    if [ -f "/var/config/retrodeck/retrodeck.json" ] && command -v jq >/dev/null 2>&1; then
+        export CFW_VERSION="$(jq -r .version /var/config/retrodeck/retrodeck.json 2>/dev/null)"
+    elif [ -f "/var/config/retrodeck/retrodeck.cfg" ]; then
+        export CFW_VERSION="$(grep -i 'version' /var/config/retrodeck/retrodeck.cfg 2>/dev/null | cut -d= -f2 | tr -d '"\r ')"
+    fi
+elif [ "$CFW_NAME" = "ROCKNIX" ] || [ "$CFW_NAME" = "JELOS" ]; then
+    # 1. Prefer date format if present in os-release
+    if [ -f "/etc/os-release" ] || [ -f "/usr/lib/os-release" ]; then
+        OS_F="/etc/os-release"; [ ! -f "$OS_F" ] && OS_F="/usr/lib/os-release"
+        DATE_VER="$(grep -oE '\b20[2-9][0-9][0-1][0-9][0-3][0-9]\b' "$OS_F" 2>/dev/null | head -n1)"
+        [ -n "$DATE_VER" ] && export CFW_VERSION="$DATE_VER"
+    fi
+    # 2. Fallback to release file if date not found
+    if [ "$CFW_VERSION" = "Unknown" ]; then
+        if [ "$CFW_NAME" = "ROCKNIX" ] && [ -f "/etc/rocknix-release" ]; then
+            export CFW_VERSION="$(tr -d '\r\n' < /etc/rocknix-release 2>/dev/null)"
+        elif [ "$CFW_NAME" = "JELOS" ] && [ -f "/etc/jelos-release" ]; then
+            export CFW_VERSION="$(tr -d '\r\n' < /etc/jelos-release 2>/dev/null)"
+        fi
+    fi
+elif [ "$CFW_NAME" = "AmberELEC" ]; then
+    ## Its own VERSION (20211122, prerelease-20261003_1121): VERSION_ID is CoreELEC's (2021.01).
+    OS_F="/etc/os-release"; [ ! -f "$OS_F" ] && OS_F="/usr/lib/os-release"
+    val="$(grep -E '^VERSION=' "$OS_F" 2>/dev/null | head -n1 | cut -d= -f2 | tr -d '"\r ')"
+    [ -n "$val" ] && export CFW_VERSION="$val"
+elif [ "$CFW_NAME" = "muOS" ]; then
+    [ -f "/opt/muos/config/system/version" ] && export CFW_VERSION="$(tr -d '\r\n' < /opt/muos/config/system/version 2>/dev/null)"
+elif [ "$CFW_NAME" = "knulli" ] || [ "$CFW_NAME" = "Batocera.linux" ]; then
+    ## knulli's own release name: "scarab 2026/08/19 16:06" on a Brick Pro (scarab is built on Batocera 42).
+    for kver in /usr/share/knulli/knulli.version /etc/knulli.version /boot/knulli.version /userdata/system/knulli.version; do
+        if [ -f "$kver" ]; then
+            val="$(head -n1 "$kver" 2>/dev/null | cut -d' ' -f1 | tr -d '\r\n')"
+            [ -n "$val" ] && export CFW_VERSION="$val"
+            break
+        fi
+    done
+    ## Otherwise the Batocera release it's built from ("gladiator", "42", "44-dev"). os-release's
+    ## VERSION_ID is Buildroot's (2024.11), so the generic lookup below would pick the wrong one.
+    if [ "$CFW_VERSION" = "Unknown" ]; then
+        for OS_F in /etc/os-release /usr/lib/os-release; do
+            val="$(grep -E '^VERSION=' "$OS_F" 2>/dev/null | head -n1 | cut -d= -f2 | tr -d '"\\\r ')"
+            if [ -n "$val" ]; then export CFW_VERSION="$val"; break; fi
+        done
+    fi
+    if [ "$CFW_VERSION" = "Unknown" ] && [ -f "/usr/share/batocera/batocera.version" ]; then
+        val="$(head -n1 /usr/share/batocera/batocera.version 2>/dev/null | cut -d' ' -f1 | tr -d '\r')"
+        [ -n "$val" ] && export CFW_VERSION="$val"
+    fi
+    [ -z "$CFW_VERSION" ] && export CFW_VERSION="Unknown"
+elif [ "$CFW_NAME" = "spruce" ]; then
+    ## spruce's own version; os-release is the base system's (Miyoo/TrimUI stock, Debian on dArkMoss).
+    if [ -f "/mnt/SDCARD/spruce/spruce" ]; then
+        export CFW_VERSION="$(head -n1 /mnt/SDCARD/spruce/spruce 2>/dev/null | tr -d '\r\n ')"
+        [ -z "$CFW_VERSION" ] && export CFW_VERSION="Unknown"
+    fi
+fi
+
+## ArkOS and family: the date in the boot splash title (Ubuntu's or Debian's version otherwise).
+[ "$CFW_VERSION" = "Unknown" ] && [ -n "$PLY_VERSION" ] && export CFW_VERSION="$PLY_VERSION"
+
+if [ "$CFW_VERSION" = "Unknown" ] && { [ -f "/etc/os-release" ] || [ -f "/usr/lib/os-release" ]; }; then
+    OS_FILE="/etc/os-release"; [ ! -f "$OS_FILE" ] && OS_FILE="/usr/lib/os-release"
+    for key in OS_VERSION VERSION_ID VERSION LIBREELEC_VERSION BUILD_ID; do
+        val="$(grep -iE "^${key}=" "$OS_FILE" 2>/dev/null | head -n1 | cut -d= -f2 | tr -d '"\r ')"
+        if [ -n "$val" ]; then export CFW_VERSION="$val"; break; fi
+    done
+fi
+
+# 3c. GLIBC & Kernel
+export CFW_GLIBC="Unknown"
+if command -v getconf >/dev/null 2>&1; then
+    G_VER="$(getconf GNU_LIBC_VERSION 2>/dev/null | grep -oE '[0-9]+\.[0-9]+' | head -n1)"
+    [ -n "$G_VER" ] && export CFW_GLIBC="$(echo "$G_VER" | tr -d '.')"
+fi
+
+if [ "$CFW_GLIBC" = "Unknown" ]; then
+    for path in /lib/libc.so.6 /lib64/libc.so.6 /usr/lib/libc.so.6 /usr/lib64/libc.so.6; do
+        if [ -f "$path" ]; then
+            GLIBC_VER="$("$path" 2>/dev/null | head -n1 | grep -oE '[0-9]+\.[0-9]+' | head -n1)"
+            if [ -n "$GLIBC_VER" ]; then export CFW_GLIBC="$(echo "$GLIBC_VER" | tr -d '.')" ; break; fi
+        fi
+    done
+fi
+
+export DEVICE_KERNEL_VERSION="$(uname -r 2>/dev/null | cut -d- -f1)"
+[ -z "$DEVICE_KERNEL_VERSION" ] && export DEVICE_KERNEL_VERSION="Unknown"
+
+# 3d. CPU SoC Discovery
+detect_dynamic_cpu() {
+    ## On mainline arm64 kernels the SMCCC soc_id driver fills machine with the board's
+    ## device-tree model ("Anbernic RG CubeXX"), not the SoC: then the compatible below.
+    local dt_model="$(tr -d '\0\r\n' < /proc/device-tree/model 2>/dev/null)"
+    [ -z "$dt_model" ] && dt_model="$(tr -d '\0\r\n' < /sys/firmware/devicetree/base/model 2>/dev/null)"
+    for soc_dir in /sys/devices/soc0 /sys/bus/soc/devices/soc0; do
+        if [ -f "$soc_dir/machine" ]; then
+            local soc_mach="$(tr -d '\0\r\n' < "$soc_dir/machine" 2>/dev/null)"
+            if [ -n "$soc_mach" ] && [ "$soc_mach" != "$dt_model" ]; then echo "$soc_mach"; return; fi
+        fi
+    done
+
+    local dt_comp="/proc/device-tree/compatible"
+    [ ! -f "$dt_comp" ] && dt_comp="/sys/firmware/devicetree/base/compatible"
+    if [ -f "$dt_comp" ]; then
+        local soc_line="$(tr '\0' '\n' < "$dt_comp" 2>/dev/null | sed -n '2p')"
+        [ -z "$soc_line" ] && soc_line="$(tr '\0' '\n' < "$dt_comp" 2>/dev/null | head -n1)"
+        if [ -n "$soc_line" ]; then
+            local clean_soc="${soc_line#*,}"
+            clean_soc="${clean_soc#sun*-}"
+            case "$clean_soc" in
+                sun50iw9*)  clean_soc="h700" ;;
+                sun50iw10*) clean_soc="a133plus" ;;
+                sun50iw12*) clean_soc="a527" ;;
+                sun50iw3p*) clean_soc="a527" ;;
+                sun50iw6*)  clean_soc="h6" ;;
+            esac
+            if [ -n "$clean_soc" ]; then echo "$clean_soc"; return; fi
+        fi
+    fi
+
+    if [ -f "/proc/cpuinfo" ]; then
+        local cpu_hw="$(grep -iE '^(model name|Hardware)' /proc/cpuinfo 2>/dev/null | head -n1 | cut -d: -f2- | sed 's/^[ \t]*//' | tr -d '\r\n')"
+        if [ -n "$cpu_hw" ] && [ "$cpu_hw" != "Unknown" ] && [ "$cpu_hw" != "dummy" ]; then
+            echo "$cpu_hw"; return
+        fi
+    fi
+
+    uname -m 2>/dev/null || echo "Unknown"
+}
+export DEVICE_CPU="$(detect_dynamic_cpu)"
+
+# 3e. RAM, Swap & ZRAM
+export DEVICE_RAM=1
+if [ -f "/proc/meminfo" ]; then
+    MEM_TOTAL_KB="$(awk '/^(MemTotal|CmaTotal):/ {sum += $2} END {print sum}' /proc/meminfo 2>/dev/null)"
+    if [ -n "$MEM_TOTAL_KB" ] && [ "$MEM_TOTAL_KB" -gt 0 ]; then
+        export DEVICE_RAM=$(( (MEM_TOTAL_KB + (MEM_TOTAL_KB / 8) + 65536) / 1048576 ))
+        export DEVICE_RAM_MB=$(( DEVICE_RAM > 4 ? (MEM_TOTAL_KB + 1023) / 1024 : (DEVICE_RAM ? DEVICE_RAM * 1024 : 512) ))
+    fi
+fi
+
+export DEVICE_HAS_SWAP="N"
+export DEVICE_HAS_ZRAM="N"
+
+if [ -f "/proc/meminfo" ]; then
+    SWAP_TOTAL="$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo 2>/dev/null)"
+    if [ -n "$SWAP_TOTAL" ] && [ "$SWAP_TOTAL" -gt 0 ]; then
+        export DEVICE_HAS_SWAP="Y"
+    fi
+fi
+
+if grep -qi "zram" /proc/swaps 2>/dev/null; then
+    export DEVICE_HAS_ZRAM="Y"
+elif [ -f "/sys/block/zram0/disksize" ]; then
+    ZRAM_SZ="$(cat /sys/block/zram0/disksize 2>/dev/null)"
+    if [ -n "$ZRAM_SZ" ] && [ "$ZRAM_SZ" -gt 0 ] 2>/dev/null; then
+        export DEVICE_HAS_ZRAM="Y"
+    fi
+fi
+
+# 3f. 3D GPU Driver & Version Discovery
+detect_dynamic_gpu() {
+    export GPU_DRIVER="Unknown"
+    export GPU_DRIVER_VERSION="Unknown"
+
+    if ls /usr/lib*/libmali*.so* /usr/lib/*/libmali*.so* >/dev/null 2>&1 || [ -f "/etc/vulkan/icd.d/mali.json" ]; then
+        export GPU_DRIVER="mali"
+    elif ls /usr/lib*/dri/panfrost_dri.so /usr/lib/*/dri/panfrost_dri.so >/dev/null 2>&1; then
+        export GPU_DRIVER="panfrost"
+    elif ls /usr/lib*/dri/msm_dri.so /usr/lib/*/dri/freedreno_dri.so >/dev/null 2>&1 || ls /usr/share/vulkan/icd.d/*freedreno*.json >/dev/null 2>&1 || [ -f "/etc/vulkan/icd.d/freedreno_icd.json" ]; then
+        export GPU_DRIVER="adreno"
+    elif ls /usr/lib*/dri/pvr_dri.so /usr/lib/*/dri/powervr_dri.so >/dev/null 2>&1; then
+        export GPU_DRIVER="powervr"
+    elif ls /usr/lib*/dri/lima_dri.so /usr/lib/*/dri/lima_dri.so >/dev/null 2>&1; then
+        export GPU_DRIVER="lima"
+    fi
+
+    if [ "$GPU_DRIVER" = "Unknown" ] && [ -e "/sys/class/drm/renderD128/device/driver" ]; then
+        local r_link
+        r_link="$(readlink -f /sys/class/drm/renderD128/device/driver 2>/dev/null)"
+        local r_name="${r_link##*/}"
+        case "$r_name" in
+            panfrost|lima|mali*|kgsl*|msm|freedreno|adreno|pvrsrvkm|pvr|powervr|v3d|vc4|etnaviv|amdgpu|radeon|i915|xe|iris|nouveau|nvidia|asahi)
+                export GPU_DRIVER="$r_name"
+                ;;
+        esac
+    fi
+
+    if [ "$GPU_DRIVER" = "Unknown" ]; then
+        for mod in panfrost lima mali mali_kbase mali_midgard mali_utgard kgsl-3d0 msm freedreno pvrsrvkm powervr pvr v3d vc4 etnaviv amdgpu radeon i915 xe nouveau nvidia asahi; do
+            if [ -d "/sys/bus/platform/drivers/$mod" ] || [ -d "/sys/module/$mod" ]; then
+                export GPU_DRIVER="$mod"
+                break
+            fi
+        done
+    fi
+
+    local cpu_l="$(echo "$DEVICE_CPU" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+    if [ "$GPU_DRIVER" = "Unknown" ]; then
+        case "$cpu_l" in
+            *qcs*|*sm8*|*sm7*|*sm6*|*sd8*|*sd7*|*sd6*|*snapdragon*)
+                export GPU_DRIVER="adreno"
+                ;;
+            *h700*|*a133*|*a133plus*)
+                export GPU_DRIVER="powervr"
+                ;;
+            *rk3566*|*rk3588*|*rk3399*|*rk3328*|*h616*|*h6*|*a527*)
+                export GPU_DRIVER="mali"
+                ;;
+            *rk3326*|*px30*)
+                export GPU_DRIVER="mali"
+                ;;
+            *bcm2711*|*bcm2837*|*rpi*)
+                export GPU_DRIVER="v3d"
+                ;;
+        esac
+    fi
+
+    case "$GPU_DRIVER" in
+        kgsl*|msm*|freedreno*)
+            export GPU_DRIVER="adreno"
+            ;;
+        mali_kbase*|mali_midgard*|mali_utgard*)
+            export GPU_DRIVER="mali"
+            ;;
+        pvrsrvkm*|pvr*)
+            export GPU_DRIVER="powervr"
+            ;;
+    esac
+
+    if [ -f "/sys/module/$GPU_DRIVER/version" ]; then
+        export GPU_DRIVER_VERSION="$(tr -d '\r\n' < "/sys/module/$GPU_DRIVER/version" 2>/dev/null)"
+    fi
+
+    if [ "$GPU_DRIVER_VERSION" = "Unknown" ] || [ -z "$GPU_DRIVER_VERSION" ]; then
+        for lib in \
+            /usr/lib*/dri/libdril_dri.so /usr/lib/*/dri/libdril_dri.so \
+            /usr/lib*/dri/libgallium_dri.so /usr/lib/*/dri/libgallium_dri.so \
+            /usr/lib*/libvulkan_*.so* /usr/lib/*/libvulkan_*.so* \
+            /usr/lib*/libEGL_mesa.so* /usr/lib/*/libEGL_mesa.so* \
+            /usr/lib*/libGLX_mesa.so* /usr/lib/*/libGLX_mesa.so* \
+            /usr/lib*/libmali.so* /usr/lib/*/libmali.so* \
+            /usr/lib*/libGL.so* /usr/lib/*/libGL.so* \
+            /usr/lib*/libEGL.so* /usr/lib/*/libEGL.so* \
+            /usr/lib*/libgbm.so*; do
+            [ -f "$lib" ] || continue
+
+            ## One pass over the library for both versions, through strings where there is
+            ## one: BusyBox grep -a took ~30s per pass over the Miyoo Flip's 45MB libmali.
+            local candidates
+            if command -v strings >/dev/null 2>&1; then
+                candidates="$(strings -n 4 "$lib" 2>/dev/null | grep -E 'Mesa [0-9]|[gr][0-9]+p[0-9]+')"
+            else
+                candidates="$(grep -aE 'Mesa [0-9]|[gr][0-9]+p[0-9]+' "$lib" 2>/dev/null)"
+            fi
+            [ -n "$candidates" ] || continue
+
+            local mesa_ver
+            mesa_ver="$(printf '%s\n' "$candidates" | grep -aoE 'Mesa [0-9]+\.[0-9]+(\.[0-9]+)?(-[0-9a-zA-Z.]+)?' | head -n1)"
+            if [ -n "$mesa_ver" ]; then
+                export GPU_DRIVER_VERSION="${mesa_ver#Mesa }"
+                break
+            fi
+
+            local mali_ver
+            mali_ver="$(printf '%s\n' "$candidates" | grep -aoE '\b[gr][0-9]+p[0-9]+(-[0-9a-zA-Z]+)?\b' | head -n1)"
+            if [ -n "$mali_ver" ]; then
+                export GPU_DRIVER_VERSION="$mali_ver"
+                break
+            fi
+        done
+    fi
+    [ -z "$GPU_DRIVER_VERSION" ] && export GPU_DRIVER_VERSION="Unknown"
+}
+detect_dynamic_gpu
+
+# 3g. Display Resolution, High-Refresh Rate & Orientation
+export DISPLAY_WIDTH=640
+export DISPLAY_HEIGHT=480
+export DISPLAY_ORIENTATION=0
+export DEVICE_REFRESH_RATE=60
+
+RES_RESOLVED=0
+
+if [ -d "/sys/class/drm" ]; then
+    for card_dir in /sys/class/drm/card*-*; do
+        if [ -f "$card_dir/status" ] && grep -q "^connected" "$card_dir/status" 2>/dev/null; then
+            if [ -f "$card_dir/modes" ]; then
+                FIRST_MODE="$(head -n1 "$card_dir/modes" 2>/dev/null)"
+                if echo "$FIRST_MODE" | grep -qE '^[0-9]+x[0-9]+'; then
+                    export DISPLAY_WIDTH="$(echo "$FIRST_MODE" | sed -E 's/^([0-9]+)x([0-9]+).*/\1/')"
+                    export DISPLAY_HEIGHT="$(echo "$FIRST_MODE" | sed -E 's/^([0-9]+)x([0-9]+).*/\2/')"
+                    RES_RESOLVED=1
+                fi
+            fi
+            if [ -f "$card_dir/vrefresh" ]; then
+                hz="$(cat "$card_dir/vrefresh" 2>/dev/null)"
+                [ -n "$hz" ] && [ "$hz" -gt 0 ] 2>/dev/null && export DEVICE_REFRESH_RATE="$hz"
+            fi
+            [ "$RES_RESOLVED" -eq 1 ] && break
+        fi
+    done
+fi
+
+detect_dynamic_refresh() {
+    for dbg_sum in /sys/kernel/debug/dri/*/summary; do
+        [ -f "$dbg_sum" ] || continue
+        local parsed_hz
+        parsed_hz="$(grep -iE 'Display mode:.*[0-9]+x[0-9]+p[0-9]+' "$dbg_sum" 2>/dev/null | grep -oE 'p[0-9]{2,3}' | tr -d 'p' | head -n1)"
+        if [ -n "$parsed_hz" ] && [ "$parsed_hz" -gt 0 ] 2>/dev/null; then
+            export DEVICE_REFRESH_RATE="$parsed_hz"
+            return
+        fi
+    done
+
+    for cfg in /storage/.config/sway/config /etc/sway/config /etc/xdg/weston/weston.ini /userdata/system/configs/sway/config; do
+        [ -f "$cfg" ] || continue
+        local sway_hz
+        sway_hz="$(grep -iE '(mode.*@[0-9]{2,3}Hz|refresh=[0-9]{2,3})' "$cfg" 2>/dev/null | grep -oE '[0-9]{2,3}' | head -n1)"
+        if [ -n "$sway_hz" ] && [ "$sway_hz" -ge 50 ] 2>/dev/null; then
+            export DEVICE_REFRESH_RATE="$sway_hz"
+            return
+        fi
+    done
+
+    for card_dir in /sys/class/drm/card*-*; do
+        if [ -f "$card_dir/modes" ] && [ "$(wc -l < "$card_dir/modes" 2>/dev/null)" -gt 1 ]; then
+            if grep -qE '120' "$card_dir/modes" 2>/dev/null; then
+                export DEVICE_REFRESH_RATE=120
+                return
+            fi
+        fi
+    done
+}
+detect_dynamic_refresh
+
+if [ "$RES_RESOLVED" -eq 0 ] && [ -f "/sys/class/graphics/fb0/modes" ]; then
+    FB_MODE="$(head -n1 /sys/class/graphics/fb0/modes 2>/dev/null | grep -oE '[0-9]+x[0-9]+' | head -n1)"
+    if [ -n "$FB_MODE" ]; then
+        export DISPLAY_WIDTH="${FB_MODE%x*}"
+        export DISPLAY_HEIGHT="${FB_MODE#*x}"
+        RES_RESOLVED=1
+    fi
+fi
+
+if [ "$RES_RESOLVED" -eq 0 ] && [ -f "/sys/class/graphics/fb0/virtual_size" ]; then
+    FB_SIZE="$(cat /sys/class/graphics/fb0/virtual_size 2>/dev/null)"
+    FB_W="${FB_SIZE%,*}"
+    FB_H="${FB_SIZE#*,}"
+    if [ "$FB_W" -gt 0 ] 2>/dev/null && [ "$FB_H" -gt 0 ] 2>/dev/null; then
+        export DISPLAY_WIDTH="$FB_W"
+        export DISPLAY_HEIGHT="$FB_H"
+    fi
+fi
+
+if [ "$RES_RESOLVED" -eq 0 ] && [ -z "$NO_SDL_RESOLUTION" ] && [ -x "$CONTROL_DIR/sdl_resolution" ]; then
+    RES_OUT="$("$CONTROL_DIR/sdl_resolution" 2>/dev/null)"
+    if [ -n "$RES_OUT" ]; then
+        export DISPLAY_WIDTH="$(echo "$RES_OUT" | awk '{print $1}')"
+        export DISPLAY_HEIGHT="$(echo "$RES_OUT" | awk '{print $2}')"
+    fi
+fi
+
+DISPLAY_WIDTH="$(echo "$DISPLAY_WIDTH" | grep -oE '^[0-9]+' || echo "640")"
+DISPLAY_HEIGHT="$(echo "$DISPLAY_HEIGHT" | grep -oE '^[0-9]+' || echo "480")"
+
+# Track if the raw hardware panel is physically portrait (e.g., 1080x1920)
+RAW_IS_PORTRAIT=0
+
+if [ "$DISPLAY_WIDTH" -lt "$DISPLAY_HEIGHT" ]; then
+    RAW_IS_PORTRAIT=1
+    TMP_W="$DISPLAY_WIDTH"
+    export DISPLAY_WIDTH="$DISPLAY_HEIGHT"
+    export DISPLAY_HEIGHT="$TMP_W"
+fi
+
+detect_dynamic_orientation() {
+    # 1. Kernel command line
+    if [ -f "/proc/cmdline" ]; then
+        local fb_rot
+        fb_rot="$(grep -oE '\bfbcon=rotate:[1-3]\b' /proc/cmdline 2>/dev/null | cut -d: -f2)"
+        case "$fb_rot" in
+            1) export DISPLAY_ORIENTATION=90;  return ;;
+            2) export DISPLAY_ORIENTATION=180; return ;;
+            3) export DISPLAY_ORIENTATION=270; return ;;
+        esac
+    fi
+
+    # 2. Linux DRM panel orientation
+    for p_orient in /sys/class/drm/card*-*/panel_orientation; do
+        [ -f "$p_orient" ] || continue
+        case "$(cat "$p_orient" 2>/dev/null)" in
+            "left_side_up")   export DISPLAY_ORIENTATION=270; return ;;
+            "right_side_up")  export DISPLAY_ORIENTATION=90;  return ;;
+            "upside_down")    export DISPLAY_ORIENTATION=180; return ;;
+        esac
+    done
+
+    # 3. Native Portrait AMOLED / DSI Hardware Panel (1080x1920 -> 270 deg)
+    if [ "$RAW_IS_PORTRAIT" -eq 1 ]; then
+        export DISPLAY_ORIENTATION=270
+        return
+    fi
+
+    export DISPLAY_ORIENTATION=0
+}
+detect_dynamic_orientation
+
+calc_gcd() {
+    local a=$1 b=$2
+    while [ "$b" -ne 0 ]; do
+        local t=$b
+        b=$((a % b))
+        a=$t
+    done
+    echo "$a"
+}
+
+GCD=$(calc_gcd "$DISPLAY_WIDTH" "$DISPLAY_HEIGHT")
+if [ "$GCD" -gt 0 ] 2>/dev/null; then
+    export ASPECT_X=$(( DISPLAY_WIDTH / GCD ))
+    export ASPECT_Y=$(( DISPLAY_HEIGHT / GCD ))
+    if [ "$ASPECT_X" -eq 8 ] && [ "$ASPECT_Y" -eq 5 ]; then
+        export ASPECT_X=16
+        export ASPECT_Y=10
+    fi
+else
+    export ASPECT_X=4
+    export ASPECT_Y=3
+fi
+
+# 3h. Controller Sticks, Universal Touchscreen & Rumble Probing
+_read_dts_be32() {
+    _hex=""
+    if command -v od >/dev/null 2>&1; then
+        _hex=$(od -An -N4 -tx1 "$1" 2>/dev/null | tr -d ' \n')
+    elif command -v hexdump >/dev/null 2>&1; then
+        _hex=$(hexdump -n4 -e '1/1 "%02x"' "$1" 2>/dev/null)
+    elif command -v xxd >/dev/null 2>&1; then
+        _hex=$(xxd -p -l 4 "$1" 2>/dev/null)
+    fi
+    echo $(( 0x${_hex:-0} ))
+}
+
+_read_line() {
+    [ -r "$1" ] || return 1
+    _val=""
+    read -r _val < "$1" 2>/dev/null
+    echo "$_val"
+}
+
+_is_iio_channel_active() {
+    local ch="$1"
+    local raw_file="/sys/bus/iio/devices/iio:device0/in_voltage${ch}_raw"
+    [ -r "$raw_file" ] || return 0
+
+    local raw_val="$(_read_line "$raw_file")"
+    raw_val=$(( raw_val + 0 ))
+
+    if [ "$raw_val" -ge 1020 ] || [ "$raw_val" -le 5 ]; then
+        return 1
+    fi
+    return 0
+}
+
+detect_dynamic_controls() {
+    local has_physical_dt_joypad=0
+    local dt_joypad_sticks=0
+    local dt_joypad_triggers="N"
+
+    local daemon_analog_streams=0
+    for d in trimui_inputd oga_events evsieve rg35xx-input joycond gamy steam handheld-daemon hhd inputplumber; do
+        local pids
+        pids=$(pidof "$d" 2>/dev/null)
+        [ -z "$pids" ] && pids=$(ps 2>/dev/null | grep -v grep | grep "$d" | awk '{print $1}')
+        for pid in $pids; do
+            local hw_fds
+            hw_fds=$(ls -l /proc/$pid/fd 2>/dev/null | grep -E 'ttyAS[0-9]|ttyS[0-9]|ttyUSB[0-9]|adc|gpadc|saradc')
+            if [ -n "$hw_fds" ]; then
+                local ch_cnt
+                ch_cnt=$(echo "$hw_fds" | grep -E -c 'ttyAS|ttyS|adc|gpadc|saradc')
+                [ "$ch_cnt" -gt "$daemon_analog_streams" ] && daemon_analog_streams="$ch_cnt"
+            fi
+        done
+    done
+
+    for dt_node in /sys/firmware/devicetree/base/*joypad* /sys/firmware/devicetree/base/*/*joypad* \
+                   /sys/firmware/devicetree/base/*joystick* /sys/firmware/devicetree/base/*/*joystick* \
+                   /sys/class/input/input*/device/of_node; do
+        [ -d "$dt_node" ] || continue
+        [ -f "$dt_node/io-channels" ] || [ -f "$dt_node/amux-count" ] || [ -f "$dt_node/direct-adc" ] || continue
+
+        has_physical_dt_joypad=1
+
+        if [ -f "$dt_node/direct-adc" ] && [ -f "$dt_node/io-channels" ]; then
+            local io_sz=$(wc -c < "$dt_node/io-channels" 2>/dev/null || echo 0)
+            local num_channels=$(( io_sz / 8 ))
+            if [ "$num_channels" -ge 4 ]; then
+                dt_joypad_sticks=2
+            elif [ "$num_channels" -ge 2 ]; then
+                dt_joypad_sticks=1
+            fi
+        fi
+
+        if [ "$dt_joypad_sticks" -eq 0 ] && [ -f "$dt_node/amux-count" ]; then
+            local amux_cnt=$(_read_dts_be32 "$dt_node/amux-count")
+            if [ "$amux_cnt" -ge 6 ]; then
+                dt_joypad_sticks=2; dt_joypad_triggers="Y"
+            elif [ "$amux_cnt" -ge 4 ]; then
+                dt_joypad_sticks=2
+            elif [ "$amux_cnt" -ge 2 ]; then
+                dt_joypad_sticks=1
+            fi
+        fi
+
+        if [ "$dt_joypad_sticks" -eq 0 ] && [ -f "$dt_node/io-channels" ]; then
+            local io_sz=$(wc -c < "$dt_node/io-channels" 2>/dev/null || echo 0)
+            local num_channels=$(( io_sz / 8 ))
+            if [ "$num_channels" -ge 4 ]; then
+                if _is_iio_channel_active 0 && _is_iio_channel_active 1; then
+                    dt_joypad_sticks=2
+                    [ "$num_channels" -ge 6 ] && dt_joypad_triggers="Y"
+                else
+                    dt_joypad_sticks=1
+                fi
+            elif [ "$num_channels" -ge 2 ]; then
+                dt_joypad_sticks=1
+            fi
+        fi
+
+        [ "$dt_joypad_sticks" -gt 0 ] && break
+    done
+
+    local has_physical_hw_stick=0
+    local has_physical_hw_trig="N"
+    local virtual_claimed_sticks=0
+    local virtual_claimed_trig="N"
+
+    for input_dir in /sys/class/input/input*; do
+        [ -d "$input_dir" ] || continue
+        local dev_props="$(_read_line "$input_dir/properties")"
+        local dev_abs="$(_read_line "$input_dir/capabilities/abs")"
+
+        if [ -z "$dev_abs" ] || [ "$dev_abs" = "0" ]; then
+            continue
+        fi
+
+        [ -n "$dev_props" ] && [ $(( 0x${dev_props:-0} & 0xb )) -ne 0 ] && continue
+        case "$dev_abs" in ??????????*) continue ;; esac
+
+        local lowest="${dev_abs##* }"
+        lowest="${lowest##*,}"
+        local val=$(( 0x${lowest:-0} ))
+
+        [ $(( val & 0x3000000 )) -ne 0 ] && continue
+
+        if [ $(( val & 0x3 )) -eq 3 ] && [ $(( val & 0x3063c )) -eq 0 ]; then
+            continue
+        fi
+
+        local dev_path=""
+        [ -e "$input_dir/device" ] && dev_path=$(readlink -f "$input_dir/device" 2>/dev/null)
+        local is_virtual=0
+        case "$dev_path" in
+            */devices/virtual/*|"") is_virtual=1 ;;
+        esac
+
+        local node_sticks=0
+        local node_trig="N"
+
+        [ $(( val & 0x3 )) -eq 3 ] && node_sticks=1
+        { [ $(( val & 0x18 )) -eq 24 ] || [ $(( val & 0x24 )) -eq 36 ]; } && node_sticks=2
+        { [ $(( val & 0x600 )) -eq 1536 ] || [ $(( val & 0x3f )) -eq 63 ]; } && node_trig="Y"
+
+        if [ "$is_virtual" -eq 0 ]; then
+            [ "$node_sticks" -gt "$has_physical_hw_stick" ] && has_physical_hw_stick="$node_sticks"
+            [ "$node_trig" = "Y" ] && has_physical_hw_trig="Y"
+        else
+            [ "$node_sticks" -gt "$virtual_claimed_sticks" ] && virtual_claimed_sticks="$node_sticks"
+            [ "$node_trig" = "Y" ] && virtual_claimed_trig="Y"
+        fi
+    done
+
+    if [ "$dt_joypad_sticks" -gt 0 ]; then
+        ANALOG_STICKS="$dt_joypad_sticks"
+        ANALOG_TRIGGERS="$dt_joypad_triggers"
+    elif [ "$has_physical_hw_stick" -ge 2 ]; then
+        ANALOG_STICKS="$has_physical_hw_stick"
+        ANALOG_TRIGGERS="$has_physical_hw_trig"
+    elif [ "$daemon_analog_streams" -gt 0 ]; then
+        ANALOG_STICKS="$daemon_analog_streams"
+        ANALOG_TRIGGERS="N"
+    elif [ "$virtual_claimed_sticks" -gt 0 ]; then
+        if [ "$DEVICE_HAS_X86" = "Y" ] || [ "$DEVICE_HAS_X86_64" = "Y" ] || [ ! -d "/proc/device-tree" ]; then
+            ANALOG_STICKS="$virtual_claimed_sticks"
+            ANALOG_TRIGGERS="$virtual_claimed_trig"
+        elif [ "$dt_joypad_sticks" -eq 0 ] && [ "$has_physical_hw_stick" -eq 0 ]; then
+            ANALOG_STICKS=0
+            ANALOG_TRIGGERS="N"
+        else
+            ANALOG_STICKS="$virtual_claimed_sticks"
+            ANALOG_TRIGGERS="$virtual_claimed_trig"
+        fi
+    elif [ "$has_physical_hw_stick" -gt 0 ]; then
+        ANALOG_STICKS="$has_physical_hw_stick"
+        ANALOG_TRIGGERS="$has_physical_hw_trig"
+    else
+        ANALOG_STICKS=0
+        ANALOG_TRIGGERS="N"
+    fi
+
+    export ANALOG_STICKS
+    export ANALOG_TRIGGERS
+}
+detect_dynamic_controls
+
+## spruce states each device's stick count in its platform config
+## (spruce/scripts/platform/<PLATFORM>.cfg), take that over probing: the Miyoo Flip's
+## sticks come through miyoo_inputd's virtual pad, which the probe doesn't trust (0).
+## Ports have it in their environment; otherwise helperFunctions.sh sets it (it only
+## sets variables).
+if [ "$CFW_NAME" = "spruce" ]; then
+    SPRUCE_STICKS="$DEVICE_NUM_ANALOG_STICKS"
+    if [ -z "$SPRUCE_STICKS" ] && [ -f "/mnt/SDCARD/spruce/scripts/helperFunctions.sh" ]; then
+        SPRUCE_STICKS="$(. /mnt/SDCARD/spruce/scripts/helperFunctions.sh > /dev/null 2>&1; echo "$DEVICE_NUM_ANALOG_STICKS")"
+    fi
+
+    case "$SPRUCE_STICKS" in
+        [0-2]) export ANALOG_STICKS="$SPRUCE_STICKS" ;;
+    esac
+fi
+load_spruce_info
+
+# Pure Dynamic Touchscreen Detection (Live Active Evdev Nodes Only)
+detect_dynamic_touchscreen() {
+    export DEVICE_TOUCH="N"
+
+    for input_dir in /sys/class/input/input*; do
+        [ -d "$input_dir" ] || continue
+
+        local dev_name="$(_read_line "$input_dir/name")"
+        local dev_props="$(_read_line "$input_dir/properties")"
+        local dev_abs="$(_read_line "$input_dir/capabilities/abs")"
+        local dev_key="$(_read_line "$input_dir/capabilities/key")"
+        local name_lower="$(echo "$dev_name" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+
+        # 1. Ignore non-touch devices (Gamepads, Buttons, Headsets, Keyboards)
+        case "$name_lower" in
+            *controller*|*gamepad*|*joypad*|*joystick*|*pwrkey*|*keyboard*|*headphone*|*headset*|*vibrat*|*button*)
+                continue
+                ;;
+        esac
+
+        # 2. Touchscreens declare INPUT_PROP_DIRECT (bit 0 = 0x1)
+        if [ -n "$dev_props" ] && [ $(( 0x${dev_props:-0} & 1 )) -ne 0 ]; then
+            if [ -n "$dev_abs" ] && [ "$dev_abs" != "0" ]; then
+                export DEVICE_TOUCH="Y"
+                return
+            fi
+        fi
+
+        # 3. Explicit Touchscreen Name with active ABS coordinates
+        case "$name_lower" in
+            *touchscreen*|*touch_panel*|*goodix*|*focaltech*|*gsl*|*ft5*|*ft6*|*gt9*|*ili2*|*synaptics*|*chipone*)
+                if [ -n "$dev_abs" ] && [ "$dev_abs" != "0" ]; then
+                    export DEVICE_TOUCH="Y"
+                    return
+                fi
+                ;;
+        esac
+
+        # 4. Multi-Touch ABS axes (ABS_MT_SLOT / ABS_MT_POSITION_X = 0x3000000)
+        local lowest_abs="${dev_abs##* }"
+        lowest_abs="${lowest_abs##*,}"
+        local abs_val=$(( 0x${lowest_abs:-0} ))
+
+        if [ $(( abs_val & 0x3000000 )) -ne 0 ]; then
+            # Verify BTN_TOUCH (bit 330) or basic touch keys are active
+            case "$dev_key" in
+                *400*|*c00*|*c03*)
+                    export DEVICE_TOUCH="Y"
+                    return
+                    ;;
+            esac
+        fi
+    done
+}
+detect_dynamic_touchscreen
+
+detect_dynamic_rumble() {
+    export DEVICE_HAS_RUMBLE="N"
+
+    for input_dir in /sys/class/input/input*; do
+        [ -d "$input_dir" ] || continue
+        local dev_name="$(_read_line "$input_dir/name")"
+        local dev_name_l="$(echo "$dev_name" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+
+        case "$dev_name_l" in
+            *loong*|*vibrat*|*rumble*|*haptic*|*ffsm*|*drv2605*|*gamepad*|*joypad*|*retrogame_joypad*|*odroidgo*|*trimui*|*odin*|*dualsense*)
+                export DEVICE_HAS_RUMBLE="Y"
+                return
+                ;;
+        esac
+
+        local dev_ff="$(_read_line "$input_dir/capabilities/ff" 2>/dev/null)"
+        if [ -n "$dev_ff" ] && [ "$dev_ff" != "0" ]; then
+            export DEVICE_HAS_RUMBLE="Y"
+            return
+        fi
+    done
+
+    for p_driver in pwm-vibrator gpio-vibrator leds-pwm-vibrator rkx120-pwm vibrator drv2605; do
+        if [ -d "/sys/bus/platform/drivers/$p_driver" ] && [ -n "$(ls -A "/sys/bus/platform/drivers/$p_driver" 2>/dev/null | grep -v 'bind\|unbind\|uevent\|module')" ]; then
+            export DEVICE_HAS_RUMBLE="Y"
+            return
+        fi
+    done
+
+    for sys_path in /sys/devices/platform/*vibrat* \
+                    /sys/devices/platform/*rumble* \
+                    /sys/devices/platform/*haptic* \
+                    /sys/class/timed_output/vibrator \
+                    /sys/class/leds/*vibrat* \
+                    /sys/class/leds/*rumble* \
+                    /sys/class/leds/*motor* \
+                    /sys/class/leds/*haptic*; do
+        if [ -e "$sys_path" ]; then
+            export DEVICE_HAS_RUMBLE="Y"
+            return
+        fi
+    done
+
+    local dt_root="/sys/firmware/devicetree/base"
+    [ ! -d "$dt_root" ] && dt_root="/proc/device-tree"
+    if [ -d "$dt_root" ]; then
+        for comp_file in "$dt_root"/*/compatible "$dt_root"/*/*/compatible "$dt_root"/compatible; do
+            [ -f "$comp_file" ] || continue
+            if grep -qiE 'pwm-vibrator|gpio-vibrator|vibrator|haptic|drv2605|isa1200|immersion|hv-haptics' "$comp_file" 2>/dev/null; then
+                local p_dir="$(dirname "$comp_file")"
+                if [ -f "$p_dir/status" ]; then
+                    local st="$(tr -d '\0\r\n' < "$p_dir/status" 2>/dev/null)"
+                    [ "$st" = "disabled" ] && continue
+                fi
+                export DEVICE_HAS_RUMBLE="Y"
+                return
+            fi
+        done
+    fi
+
+    local dev_l="$(echo "$DEVICE_NAME" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+    case "$dev_l" in
+        *miniloong*|*rgb30*|*rgb10*|*rgb20*|*rk2023*|*x55*|*rg35*|*rg40*|*rg50*|*rg55*|*smart_pro*|*brick*|*retroid*|*odin*|*steam_deck*|*rog_ally*|*legion_go*)
+            export DEVICE_HAS_RUMBLE="Y"
+            return
+            ;;
+    esac
+}
+detect_dynamic_rumble
+
+# 3i. Capabilities & Tags
+# A plain string, not a bash array: some firmwares have BusyBox as /bin/bash
+# (TrimUI Smart Pro 1.0.4), and ports run this through it.
+CAPS=""
+add_cap() { CAPS="$CAPS $1"; }
+
+add_cap "$DEVICE_ARCH"
+[ "$DEVICE_HAS_ARMHF" = "Y" ] && add_cap "armhf"
+[ "$DEVICE_HAS_AARCH64" = "Y" ] && add_cap "aarch64"
+[ "$DEVICE_HAS_X86" = "Y" ] && add_cap "x86"
+[ "$DEVICE_HAS_X86_64" = "Y" ] && add_cap "x86_64"
+
+HAS_DESKTOP_GL="N"
+HAS_DRI_DRIVERS="N"
+
+for dri_path in /usr/lib*/dri/*_dri.so /usr/lib/*/dri/*_dri.so /lib*/dri/*_dri.so /usr/lib*/libGLX_nvidia.so* /usr/lib/*/libGLX_nvidia.so*; do
+    if [ -e "$dri_path" ]; then
+        HAS_DRI_DRIVERS="Y"
+        break
+    fi
+done
+
+if [ "$HAS_DRI_DRIVERS" = "Y" ]; then
+    for gl_path in /usr/lib*/libGL.so* /usr/lib/*/libGL.so* /lib*/libGL.so*; do
+        [ -e "$gl_path" ] || continue
+        real_gl="$(readlink -f "$gl_path" 2>/dev/null)"
+        case "$real_gl" in
+            *gl4es*|*libmali*|*libGLES*)
+                continue
+                ;;
+        esac
+        HAS_DESKTOP_GL="Y"
+        break
+    done
+fi
+
+[ "$HAS_DESKTOP_GL" = "Y" ] && add_cap "opengl"
+
+for vk_path in /usr/lib*/libvulkan.so* /usr/lib/*/libvulkan.so* /usr/share/vulkan/icd.d/*.json /etc/vulkan/icd.d/*.json; do
+    if [ -e "$vk_path" ]; then add_cap "vulkan"; break; fi
+done
+
+CPU_LOWER="$(echo "$DEVICE_CPU" | tr 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' 'abcdefghijklmnopqrstuvwxyz')"
+
+case "$CPU_LOWER" in
+    *rk3326*|*px30*)
+        ;;
+    *)
+        add_cap "power"
+        ;;
+esac
+
+if [ "$DEVICE_RAM" -ge 4 ]; then
+    case "$CPU_LOWER" in
+        *rk3326*|*h700*|*a133*|*a133plus*|*a527*|*px30*|*sun50iw9*|*sun50iw10*)
+            ;;
+        *)
+            add_cap "ultra"
+            ;;
+    esac
+fi
+
+add_cap "${DISPLAY_WIDTH}x${DISPLAY_HEIGHT}"
+add_cap "${ASPECT_X}:${ASPECT_Y}"
+[ "$ASPECT_X" -eq 16 ] && [ "$ASPECT_Y" -eq 10 ] && add_cap "16:9"
+
+if [ "$DISPLAY_WIDTH" -ge 960 ] || [ "$DISPLAY_HEIGHT" -ge 720 ]; then
+    add_cap "hires"
+elif [ "$DISPLAY_WIDTH" -lt 640 ] || [ "$DISPLAY_HEIGHT" -lt 480 ]; then
+    add_cap "lowres"
+fi
+## Wide by the ratio (3:2 and up). Not by "ASPECT_X >= 16": the Retroid Pocket Classic's 1240x1080 is 31:27,
+## which made a nearly square screen "wide".
+if [ $(( ASPECT_X * 10 / ASPECT_Y )) -ge 15 ]; then
+    add_cap "wide"
+elif [ $(( DISPLAY_WIDTH * 100 / DISPLAY_HEIGHT )) -le 125 ] && [ $(( DISPLAY_HEIGHT * 100 / DISPLAY_WIDTH )) -le 125 ]; then
+    ## Square, or nearly: 1:1 screens, and the Retroid Pocket Classic's 1240x1080 (31:27) and its kind, which the
+    ## 4:3 layouts don't fit.
+    add_cap "square"
+fi
+
+i=0
+while [ "$i" -le "${ANALOG_STICKS:-0}" ]; do
+    add_cap "analog_$i"
+    i=$((i + 1))
+done
+[ "$ANALOG_TRIGGERS" = "Y" ] && add_cap "analog_triggers"
+[ "$DEVICE_TOUCH" = "Y" ] && add_cap "touch"
+[ "$DEVICE_HAS_RUMBLE" = "Y" ] && add_cap "rumble"
+
+for tier in 1 2 4 8 16 32; do
+    if [ "$DEVICE_RAM" -ge "$tier" ]; then add_cap "${tier}gb"; fi
+done
+
+for sav_dir in /userdata/saves /storage/roms/ports /roms/ports /mnt/SDCARD/Roms/PORTS "$HOME/.local/share"; do
+    if [ -d "$sav_dir" ] && [ -w "$sav_dir" ]; then
+        add_cap "restore"
+        break
+    fi
+done
+
+export DEVICE_CAPABILITIES="$(printf '%s\n' $CAPS | sort -u | tr '\n' ' ' | sed 's/[ \t]*$//')"
+
+# ------------------------------------------------------------------------------
+# 4. SAVE CACHED ENVIRONMENT & OUTPUT (No redundant device_info.env)
+# ------------------------------------------------------------------------------
+save_device_info() {
+    local target_file="$1"
+    cat <<EOF > "$target_file"
+DEVICE_INFO_VERSION="$DEVICE_INFO_VERSION"
+PM_VERSION="$PM_VERSION"
+CFW_NAME="$CFW_NAME"
+CFW_VERSION="$CFW_VERSION"
+CFW_GLIBC="$CFW_GLIBC"
+DEVICE_KERNEL_VERSION="$DEVICE_KERNEL_VERSION"
+DEVICE_NAME="$DEVICE_NAME"
+DEVICE_CPU="$DEVICE_CPU"
+DEVICE_ARCH="$DEVICE_ARCH"
+GPU_DRIVER="$GPU_DRIVER"
+GPU_DRIVER_VERSION="$GPU_DRIVER_VERSION"
+DEVICE_RAM="$DEVICE_RAM"
+DEVICE_RAM_MB="$DEVICE_RAM_MB"
+DEVICE_HAS_SWAP="$DEVICE_HAS_SWAP"
+DEVICE_HAS_ZRAM="$DEVICE_HAS_ZRAM"
+DEVICE_HAS_ARMHF="$DEVICE_HAS_ARMHF"
+DEVICE_HAS_AARCH64="$DEVICE_HAS_AARCH64"
+DEVICE_HAS_X86="$DEVICE_HAS_X86"
+DEVICE_HAS_X86_64="$DEVICE_HAS_X86_64"
+DISPLAY_WIDTH="$DISPLAY_WIDTH"
+DISPLAY_HEIGHT="$DISPLAY_HEIGHT"
+DISPLAY_ORIENTATION="$DISPLAY_ORIENTATION"
+DEVICE_REFRESH_RATE="$DEVICE_REFRESH_RATE"
+ASPECT_X="$ASPECT_X"
+ASPECT_Y="$ASPECT_Y"
+ANALOG_STICKS="$ANALOG_STICKS"
+ANALOG_TRIGGERS="$ANALOG_TRIGGERS"
+DEVICE_TOUCH="$DEVICE_TOUCH"
+DEVICE_HAS_RUMBLE="$DEVICE_HAS_RUMBLE"
+DEVICE_CAPABILITIES="$DEVICE_CAPABILITIES"
+EOF
+}
+
+if [ -d "$CONTROL_DIR" ] && [ -w "$CONTROL_DIR" ]; then
+    save_device_info "$CACHED_ENV"
+fi
+
+if [ "$SOURCED" -eq 0 ]; then
+    echo "========================================"
+    echo " Volkyport Device Information (v$DEVICE_INFO_VERSION)"
+    echo "========================================"
+    printf "%-20s: %s\n" "CFW_NAME" "$CFW_NAME"
+    printf "%-20s: %s\n" "CFW_VERSION" "$CFW_VERSION"
+    printf "%-20s: %s\n" "CFW_GLIBC" "$CFW_GLIBC"
+    printf "%-20s: %s\n" "KERNEL_VERSION" "$DEVICE_KERNEL_VERSION"
+    printf "%-20s: %s\n" "DEVICE_NAME" "$DEVICE_NAME"
+    printf "%-20s: %s\n" "DEVICE_CPU" "$DEVICE_CPU"
+    printf "%-20s: %s\n" "DEVICE_ARCH" "$DEVICE_ARCH"
+    printf "%-20s: %s (v%s)\n" "GPU_DRIVER" "$GPU_DRIVER" "$GPU_DRIVER_VERSION"
+    printf "%-20s: %s GB (%s MB)\n" "DEVICE_RAM" "$DEVICE_RAM" "$DEVICE_RAM_MB"
+    printf "%-20s: SWAP=%s, ZRAM=%s\n" "MEMORY_SWAP" "$DEVICE_HAS_SWAP" "$DEVICE_HAS_ZRAM"
+    printf "%-20s: %sx%s (%s:%s) @ %sHz\n" "DISPLAY" "$DISPLAY_WIDTH" "$DISPLAY_HEIGHT" "$ASPECT_X" "$ASPECT_Y" "$DEVICE_REFRESH_RATE"
+    printf "%-20s: %s deg\n" "ORIENTATION" "$DISPLAY_ORIENTATION"
+    printf "%-20s: %s\n" "ANALOG_STICKS" "$ANALOG_STICKS"
+    printf "%-20s: %s\n" "ANALOG_TRIGGERS" "$ANALOG_TRIGGERS"
+    printf "%-20s: %s\n" "DEVICE_TOUCH" "$DEVICE_TOUCH"
+    printf "%-20s: %s\n" "DEVICE_RUMBLE" "$DEVICE_HAS_RUMBLE"
+    printf "%-20s: %s\n" "DEVICE_CAPABILITIES" "$DEVICE_CAPABILITIES"
+    echo "========================================"
+fi

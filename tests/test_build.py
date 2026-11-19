@@ -86,7 +86,7 @@ def test_test_version(test_build):
     assert (dist / "version").read_text().strip() == f"{TODAY}_0069"
     assert (dist / "test-builds.txt").read_text().split() == [f"{TODAY}_0069"]
     ## No version.json, no installers: test builds aren't published.
-    assert sorted(path.name for path in dist.iterdir()) == ["PortMaster.zip", "test-builds.txt", "version"]
+    assert sorted(path.name for path in dist.iterdir()) == ["Volkyport.zip", "test-builds.txt", "version"]
 
 
 def test_next_test_version(tmp_path):
@@ -106,33 +106,33 @@ def test_unknown_channel(tmp_path):
     assert "Unknown release channel" in result.stdout
 
 
-def test_portmaster_zip_contents(test_build):
-    names = zip_names(test_build['dist'] / "PortMaster.zip")
+def test_volkyport_zip_contents(test_build):
+    names = zip_names(test_build['dist'] / "Volkyport.zip")
 
-    assert {"PortMaster/pugwash", "PortMaster/harbourmaster", "PortMaster/pylibs.zip",
-            "PortMaster/PortMaster.sh", "PortMaster/utils/pm_launch.txt", "PortMaster/version",
-            "PortMaster/muos/PortMaster.txt", "PortMaster/control.txt"} <= names
+    assert {"Volkyport/pugwash", "Volkyport/harbourmaster", "Volkyport/pylibs.zip",
+            "Volkyport/Volkyport.sh", "Volkyport/utils/vp_launch.txt", "Volkyport/version",
+            "Volkyport/muos/Volkyport.txt", "Volkyport/control.txt"} <= names
 
-    assert all(name.startswith("PortMaster/") for name in names)
+    assert all(name.startswith("Volkyport/") for name in names)
     junk = [name for name in names if (
-        name.startswith(("PortMaster/pylibs/", "PortMaster/exlibs/", "PortMaster/config/", "PortMaster/themes/")) or
+        name.startswith(("Volkyport/pylibs/", "Volkyport/exlibs/", "Volkyport/config/", "Volkyport/themes/")) or
         "__pycache__" in name or name.endswith((".squashfs", ".pyc", "harbourmaster.txt", "pugwash.txt")))]
     assert junk == []
 
 
 def test_version_stamped(test_build):
-    with zipfile.ZipFile(test_build['dist'] / "PortMaster.zip") as zf:
-        pugwash = zf.read("PortMaster/pugwash").decode()
-        version = zf.read("PortMaster/version").decode().strip()
+    with zipfile.ZipFile(test_build['dist'] / "Volkyport.zip") as zf:
+        pugwash = zf.read("Volkyport/pugwash").decode()
+        version = zf.read("Volkyport/version").decode().strip()
 
-    assert f"PORTMASTER_VERSION = '{TODAY}_0069'" in pugwash
-    assert "PORTMASTER_RELEASE_CHANNEL = 'beta'" in pugwash
+    assert f"VOLKYPORT_VERSION = '{TODAY}_0069'" in pugwash
+    assert "VOLKYPORT_RELEASE_CHANNEL = 'beta'" in pugwash
     assert version == f"{TODAY}_0069"
 
 
 def test_pylibs_zip_contents(test_build):
-    with zipfile.ZipFile(test_build['dist'] / "PortMaster.zip") as zf:
-        names = zip_names(zf.read("PortMaster/pylibs.zip"))
+    with zipfile.ZipFile(test_build['dist'] / "Volkyport.zip") as zf:
+        names = zip_names(zf.read("Volkyport/pylibs.zip"))
 
     assert {"pylibs/pugwash/app.py", "pylibs/harbourmaster/platform/__init__.py",
             "pylibs/harbourmaster/platform.py", "exlibs/loguru/__init__.py",
@@ -153,13 +153,13 @@ def test_release_updates_version_json(tmp_path):
     run("do_release.sh", "beta", "2026.10.13-1234", PM_DIST_DIR=str(dist), PM_VERSION_JSON=str(version_json))
 
     data = json.loads((dist / "version.json").read_text())
-    md5 = hashlib.md5((dist / "PortMaster.zip").read_bytes()).hexdigest()
+    md5 = hashlib.md5((dist / "Volkyport.zip").read_bytes()).hexdigest()
 
     ## beta updates the beta and alpha channels, stable stays.
     for channel in ("alpha", "beta"):
         assert data[channel] == {
             "version": "2026.10.13-1234", "md5": md5,
-            "url": "https://github.com/PortsMaster/PortMaster-GUI/releases/download/2026.10.13-1234/PortMaster.zip"}
+            "url": "https://github.com/Volkybaba/PortMaster-GUI/releases/download/2026.10.13-1234/Volkyport.zip"}
 
     assert data["stable"] == old["stable"]
     assert (dist / "version").read_text().strip() == "2026.10.13-1234"
@@ -168,24 +168,24 @@ def test_release_updates_version_json(tmp_path):
 
 
 @pytest.mark.parametrize("script, launcher, stub", [
-    ("do_muos_release.sh", "mnt/mmc/MUOS/PortMaster/PortMaster.sh", "muos"),
-    ("do_trimui_release.sh", "Apps/PortMaster/launch.sh", "trimui"),
-    ("do_x86_64_release.sh", "PortMaster/PortMaster.sh", "retrodeck"),
+    ("do_muos_release.sh", "mnt/mmc/MUOS/Volkyport/Volkyport.sh", "muos"),
+    ("do_trimui_release.sh", "Apps/Volkyport/launch.sh", "trimui"),
+    ("do_x86_64_release.sh", "Volkyport/Volkyport.sh", "retrodeck"),
     ])
 def test_cfw_bundles(test_build, tmp_path, script, launcher, stub):
     dist = tmp_path / "dist"
     dist.mkdir()
-    shutil.copy(str(test_build['dist'] / "PortMaster.zip"), str(dist))
+    shutil.copy(str(test_build['dist'] / "Volkyport.zip"), str(dist))
 
     run(script, PM_DIST_DIR=str(dist))
 
-    bundle = next(dist.glob("*.portmaster.zip"))
+    bundle = next(dist.glob("*.volkyport.zip"))
     with zipfile.ZipFile(bundle) as zf:
-        assert zf.read(launcher).decode() == (PM_DIR / stub / "PortMaster.txt").read_text()
+        assert zf.read(launcher).decode() == (PM_DIR / stub / "Volkyport.txt").read_text()
 
 
 def test_testsuite_port(tmp_path):
-    ## ./do_release.sh testsuite: the test build plus pmtest.zip, the "PortMaster Test Suite" port.
+    ## ./do_release.sh testsuite: the test build plus pmtest.zip, the "Volkyport Test Suite" port.
     wheels = tmp_path / "wheels"
     wheels.mkdir()
     with zipfile.ZipFile(wheels / "fakepytest-1.0-py3-none-any.whl", 'w') as zf:
@@ -198,14 +198,14 @@ def test_testsuite_port(tmp_path):
     assert re.fullmatch(r"\d{4}-\d\d-\d\d_\d\d69", version)
 
     names = zip_names(dist / "pmtest.zip")
-    assert {"PortMaster Test Suite.sh", "pmtest/port.json", "pmtest/suite.py", "pmtest/fifo.py",
-            "pmtest/pmtest_plugin.py", "pmtest/PortMaster.zip", "pmtest/site/fakepytest/__init__.py",
+    assert {"Volkyport Test Suite.sh", "pmtest/port.json", "pmtest/suite.py", "pmtest/fifo.py",
+            "pmtest/pmtest_plugin.py", "pmtest/Volkyport.zip", "pmtest/site/fakepytest/__init__.py",
             "pmtest/tree/pytest.ini", "pmtest/tree/tests/conftest.py", "pmtest/tree/tools/installer.sh",
-            "pmtest/tree/PortMaster/pugwash", "pmtest/tree/PortMaster/pylibs/pugwash/app.py"} <= names
+            "pmtest/tree/Volkyport/pugwash", "pmtest/tree/Volkyport/pylibs/pugwash/app.py"} <= names
 
     ## The code under test without what the tests never need.
-    assert [name for name in names if name.startswith(("pmtest/tree/PortMaster/runtimes/", "pmtest/tree/PortMaster/gptokeyb",
-            "pmtest/tree/PortMaster/7zzs")) or name.endswith(".so")] == []
+    assert [name for name in names if name.startswith(("pmtest/tree/Volkyport/runtimes/", "pmtest/tree/Volkyport/gptokeyb",
+            "pmtest/tree/Volkyport/7zzs")) or name.endswith(".so")] == []
     ## tests/test_test_suite.py reads it.
     assert "pmtest/tree/tools/test_suite/pmtest/port.json" in names
     ## Reports are only sent from builds made with PM_PMTEST_UPLOAD.
@@ -219,10 +219,10 @@ def test_testsuite_port(tmp_path):
 
     ## The build it installs is the one it was made with, and harbourmaster takes it as a port.
     with zipfile.ZipFile(dist / "pmtest.zip") as zf:
-        inner = zf.read("pmtest/PortMaster.zip")
+        inner = zf.read("pmtest/Volkyport.zip")
 
     with zipfile.ZipFile(io.BytesIO(inner)) as zf:
-        assert zf.read("PortMaster/version").decode().strip() == version
+        assert zf.read("Volkyport/version").decode().strip() == version
 
     ## For `harbourmaster install <url>/pmtest.zip.md5`.
     md5 = hashlib.md5((dist / "pmtest.zip").read_bytes()).hexdigest()
@@ -230,4 +230,4 @@ def test_testsuite_port(tmp_path):
 
     from harbourmaster.captain import check_port
     port_info = check_port("pmtest.zip", dist / "pmtest.zip", {})
-    assert port_info['attr']['title'] == "PortMaster Test Suite"
+    assert port_info['attr']['title'] == "Volkyport Test Suite"

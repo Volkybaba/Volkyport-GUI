@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# SPDX-License-Identifier: MIT
+#
+
+CUR_TTY="/dev/null"
+GODOT2_OPTS="-r ${DISPLAY_WIDTH}x${DISPLAY_HEIGHT} -f"
+GODOT_OPTS="--resolution ${DISPLAY_WIDTH}x${DISPLAY_HEIGHT} -f"
+
+# No dialog pipe while a port runs; just print.
+pm_message() {
+    echo "$1" > "$CUR_TTY"
+}
+
+pm_platform_helper() {
+    pm_message_close
+
+    if [ -e "$PM_PIPE" ]; then
+        VolkyportDialogExit
+    fi
+    printf ""
+}
+
+# Device-specific settings live on the spruce card.
+[ -f /mnt/SDCARD/spruce/volkyport/mod.txt ] && source /mnt/SDCARD/spruce/volkyport/mod.txt

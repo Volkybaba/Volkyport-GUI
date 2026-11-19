@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# The harbourmaster CLI is called by PortMaster.sh and other shell scripts, so
+# The harbourmaster CLI is called by Volkyport.sh and other shell scripts, so
 # its commands and exit codes are part of the device contract.
 
 import json

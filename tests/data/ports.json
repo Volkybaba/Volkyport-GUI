@@ -54,7 +54,7 @@
         "md5": "8e434078431e4bf189e5e03c6f234b28",
         "release_id": "2025-07-16_2108",
         "size": 8159843,
-        "url": "https://github.com/PortsMaster/PortMaster-New/releases/download/2025-07-16_2108/sprout.zip"
+        "url": "https://github.com/Volkybaba/Volkyport-New/releases/download/2025-07-16_2108/sprout.zip"
       }
     },
     "100liljumps.zip": {
@@ -106,7 +106,7 @@
         "md5": "4564098cc201d6f6366bd05943d8cf8f",
         "release_id": "2025-12-24_0552",
         "size": 87022919,
-        "url": "https://github.com/PortsMaster/PortMaster-New/releases/download/2025-12-24_0552/100liljumps.zip"
+        "url": "https://github.com/Volkybaba/Volkyport-New/releases/download/2025-12-24_0552/100liljumps.zip"
       }
     },
     "2048plus.zip": {
@@ -153,7 +153,7 @@
         "md5": "d66e25f6a714590772597996dba18a6d",
         "release_id": "2026-09-21_0303",
         "size": 105396245,
-        "url": "https://github.com/PortsMaster/PortMaster-New/releases/download/2026-09-21_0303/2048plus.zip"
+        "url": "https://github.com/Volkybaba/Volkyport-New/releases/download/2026-09-21_0303/2048plus.zip"
       }
     },
     "starfighter.zip": {
@@ -201,7 +201,7 @@
         "md5": "380382b05deb0e472509c710690216ed",
         "release_id": "2026-07-15_0750",
         "size": 37524644,
-        "url": "https://github.com/PortsMaster/PortMaster-New/releases/download/2026-07-15_0750/starfighter.zip"
+        "url": "https://github.com/Volkybaba/Volkyport-New/releases/download/2026-07-15_0750/starfighter.zip"
       }
     }
   },
@@ -210,7 +210,7 @@
       "name": "gameinfo.zip",
       "md5": "7463dcf80d183c3097b09918d6b53b66",
       "size": 172854594,
-      "url": "https://github.com/PortsMaster/PortMaster-New/releases/download/2026-10-05_1447/gameinfo.zip"
+      "url": "https://github.com/Volkybaba/Volkyport-New/releases/download/2026-10-05_1447/gameinfo.zip"
     },
     "ags_3.6.squashfs": {
       "name": "Adventure Game Studio 3.6",
@@ -218,7 +218,7 @@
       "runtime_arch": "aarch64",
       "md5": "e8a38f0d93e37d7732c0fe63b6168e75",
       "size": 3088384,
-      "url": "https://github.com/PortsMaster/PortMaster-New/releases/download/2025-10-04_1030/ags_3.6.squashfs"
+      "url": "https://github.com/Volkybaba/Volkyport-New/releases/download/2025-10-04_1030/ags_3.6.squashfs"
     },
     "ags_3.6.x86_64.squashfs": {
       "name": "Adventure Game Studio 3.6",
@@ -226,7 +226,7 @@
       "runtime_arch": "x86_64",
       "md5": "7f876a8734a12706d46773b8623cfcfe",
       "size": 1933312,
-      "url": "https://github.com/PortsMaster/PortMaster-New/releases/download/2025-10-04_1030/ags_3.6.x86_64.squashfs"
+      "url": "https://github.com/Volkybaba/Volkyport-New/releases/download/2025-10-04_1030/ags_3.6.x86_64.squashfs"
     },
     "dotnet-8.0.12.squashfs": {
       "name": "DotNet 8.0.12",
@@ -234,7 +234,7 @@
       "runtime_arch": "aarch64",
       "md5": "9ec894aafc022ac97771e9828000464d",
       "size": 29970432,
-      "url": "https://github.com/PortsMaster/PortMaster-New/releases/download/2025-05-12_1413/dotnet-8.0.12.squashfs"
+      "url": "https://github.com/Volkybaba/Volkyport-New/releases/download/2025-05-12_1413/dotnet-8.0.12.squashfs"
     },
     "gmtoolkit.squashfs": {
       "name": "GMToolkit",
@@ -242,7 +242,7 @@
       "runtime_arch": "aarch64",
       "md5": "16540876e9fa0eead98376821741a8ee",
       "size": 120782848,
-      "url": "https://github.com/PortsMaster/PortMaster-New/releases/download/2025-06-10_1636/gmtoolkit.squashfs"
+      "url": "https://github.com/Volkybaba/Volkyport-New/releases/download/2025-06-10_1636/gmtoolkit.squashfs"
     }
   }
 }

@@ -157,11 +157,11 @@ def test_find_control_dir(monkeypatch, tmp_path):
     assert hardware._find_control_dir() == tmp_path / "pm"
 
     monkeypatch.delenv("PORTMASTER_HOME")
-    ## From a checkout: the PortMaster folder this file is in.
-    assert hardware._find_control_dir().name == "PortMaster"
+    ## From a checkout: the Volkyport folder this file is in.
+    assert hardware._find_control_dir().name == "Volkyport"
 
 
-@pytest.mark.parametrize("script_name", ["device_info.sh", "PortMaster/device_info.txt"])
+@pytest.mark.parametrize("script_name", ["device_info.sh", "Volkyport/device_info.txt"])
 def test_device_info_script_names(tmp_path, script_name):
     path = tmp_path / script_name
     path.parent.mkdir(parents=True, exist_ok=True)

@@ -16,11 +16,11 @@ from conftest import basic_port_files, write_port_zip
 ################################################################################
 ## Startup
 def test_first_run_creates_config(hm, hm_dirs):
-    cfg_dir = hm_dirs['tools_dir'] / "PortMaster" / "config"
+    cfg_dir = hm_dirs['tools_dir'] / "Volkyport" / "config"
 
     assert (cfg_dir / "config.json").is_file()
     assert (cfg_dir / "ports_info.json").is_file()
-    assert sorted(p.name for p in cfg_dir.glob("*.source.json")) == ["020_portmaster.source.json", "021_portmaster.multiverse.source.json"]
+    assert sorted(p.name for p in cfg_dir.glob("*.source.json")) == ["020_volkyport.source.json", "021_portmaster.multiverse.source.json"]
 
     config = json.loads((cfg_dir / "config.json").read_text())
     assert config['first-run'] is False
@@ -144,7 +144,7 @@ def test_install_from_source(online_hm, ports_json_data, callback):
 
     online_hm.load_ports()
     installed = online_hm.installed_ports["100liljumps.zip"]
-    assert installed['status']['source'] == "PortMaster"
+    assert installed['status']['source'] == "Volkyport"
     assert installed['attr']['title'] == "100 Lil Jumps"
 
 
@@ -152,7 +152,7 @@ def test_install_from_named_source(online_hm):
     assert online_hm.install_port("pmmv/100liljumps.zip") == 255
     assert online_hm.downloads == []
 
-    assert online_hm.install_port("pm/100liljumps.zip") == 0
+    assert online_hm.install_port("vp/100liljumps.zip") == 0
 
 
 def test_install_unknown_port(online_hm, callback):

@@ -1,0 +1,7 @@
+{
+"label":"Volkyport",
+"icon":"icon.png",
+"iconsel":"icon.png",
+"launch":"launch.sh",
+"description":"Volkyport: the ultimate port manager."
+}

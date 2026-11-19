@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# SPDX-License-Identifier: MIT
+#
+# Launches Volkyport: everything else lives in $controlfolder/utils/vp_launch.txt
+# and spruce/launch_hooks.txt.
+
+controlfolder="/mnt/SDCARD/Persistent/volkyport/Volkyport"
+
+source "$controlfolder/utils/vp_launch.txt" spruce; exit $?

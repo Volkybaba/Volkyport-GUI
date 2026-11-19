@@ -458,7 +458,7 @@ def test_testing_port_without_screenshot(hm, tmp_path):
 
 
 def test_source_port_keeps_the_source_screenshot(online_hm, hm_dirs):
-    source = online_hm.sources['pm']
+    source = online_hm.sources['vp']
     source_image = source._images_dir / "100liljumps.screenshot.png"
     source_image.write_bytes(b"from the source")
     source.images["100liljumps.zip"] = {"screenshot": source_image.name}
@@ -567,23 +567,23 @@ def test_install_theme_from_url_removes_the_download(url_server):
 
 
 ################################################################################
-## PortMaster.zip itself
-def write_portmaster_zip(zip_path):
+## Volkyport.zip itself
+def write_volkyport_zip(zip_path):
     with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_STORED) as zf:
-        zf.writestr("PortMaster/first.txt", "first file " * 100)
-        zf.writestr("PortMaster/second.txt", "second file " * 100)
+        zf.writestr("Volkyport/first.txt", "first file " * 100)
+        zf.writestr("Volkyport/second.txt", "second file " * 100)
 
     return zip_path
 
 
-def test_portmaster_zip_installs(hm, tmp_path):
-    assert hm.install_port(str(write_portmaster_zip(tmp_path / "PortMaster.zip"))) == 0
-    assert (hm.tools_dir / "PortMaster" / "second.txt").is_file()
+def test_volkyport_zip_installs(hm, tmp_path):
+    assert hm.install_port(str(write_volkyport_zip(tmp_path / "Volkyport.zip"))) == 0
+    assert (hm.tools_dir / "Volkyport" / "second.txt").is_file()
 
 
 @pytest.mark.parametrize("damage", ["truncated", "bad_crc"])
-def test_damaged_portmaster_zip_installs_nothing(hm, tmp_path, callback, damage):
-    zip_file = write_portmaster_zip(tmp_path / "PortMaster.zip")
+def test_damaged_volkyport_zip_installs_nothing(hm, tmp_path, callback, damage):
+    zip_file = write_volkyport_zip(tmp_path / "Volkyport.zip")
     data = bytearray(zip_file.read_bytes())
 
     if damage == "truncated":
@@ -596,21 +596,21 @@ def test_damaged_portmaster_zip_installs_nothing(hm, tmp_path, callback, damage)
     zip_file.write_bytes(bytes(data))
 
     assert hm.install_port(str(zip_file)) == 255
-    assert not (hm.tools_dir / "PortMaster" / "first.txt").exists()
-    assert hm.last_install_error == "PortMaster.zip is damaged, download it again."
-    assert callback.message_boxes[-1] == "PortMaster failed to install."
+    assert not (hm.tools_dir / "Volkyport" / "first.txt").exists()
+    assert hm.last_install_error == "Volkyport.zip is damaged, download it again."
+    assert callback.message_boxes[-1] == "Volkyport failed to install."
 
 
-def test_portmaster_zip_replaces_running_launcher(hm, tmp_path):
-    ## ROCKNIX runs PortMaster/PortMaster.sh from where the zip puts it; a self-update
+def test_volkyport_zip_replaces_running_launcher(hm, tmp_path):
+    ## ROCKNIX runs Volkyport/Volkyport.sh from where the zip puts it; a self-update
     ## must not change the file under the bash that is running it.
-    launcher = hm.tools_dir / "PortMaster" / "PortMaster.sh"
+    launcher = hm.tools_dir / "Volkyport" / "Volkyport.sh"
     launcher.parent.mkdir(parents=True, exist_ok=True)
     launcher.write_text("old launcher\n")
 
-    zip_file = tmp_path / "PortMaster.zip"
+    zip_file = tmp_path / "Volkyport.zip"
     with zipfile.ZipFile(zip_file, 'w') as zf:
-        zf.writestr("PortMaster/PortMaster.sh", "new launcher\n")
+        zf.writestr("Volkyport/Volkyport.sh", "new launcher\n")
 
     with open(launcher) as running:
         assert hm.install_port(str(zip_file)) == 0

@@ -8,7 +8,7 @@
 #
 # --renders DIR reuses an earlier run's renders (they take a few minutes). The screenshots show the
 # theme server's fixed clock and disk, and its cached ports list, so a run changes a picture only
-# when the theme (or PortMaster) changed what it shows.
+# when the theme (or Volkyport) changed what it shows.
 
 import argparse
 import json
@@ -21,14 +21,14 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
-PM_DIR = ROOT / "PortMaster"
+PM_DIR = ROOT / "Volkyport"
 DEFAULT_THEME = PM_DIR / "pylibs" / "default_theme"
 OUT = ROOT / "docs" / "theme"
 FONT = str(PM_DIR / "pylibs" / "resources" / "DejaVuSans.ttf")
 FONT_BOLD = str(DEFAULT_THEME / "Roboto-Medium.ttf")
 
 SCHEMES = ("Dark Mode", "Light Mode", "OLED Mode")
-## The screens a theme draws (the selection lists and the warnings are always PortMaster's own).
+## The screens a theme draws (the selection lists and the warnings are always Volkyport's own).
 SCREENS = ("main_menu", "ports_all", "port_info", "port_info_popup", "port_links", "filters", "featured",
            "featured_list", "options", "runtimes", "themes", "theme_schemes", "language", "theme_editor",
            "messages", "message_box")

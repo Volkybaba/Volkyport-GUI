@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# A port's links (its PortMaster website page and its stores) with QR codes: the list
+# A port's links (its Volkyport website page and its stores) with QR codes: the list
 # port_links() makes from port.json "store" entries, and the screen X opens on port info.
 
 import pytest
@@ -27,9 +27,9 @@ def test_store_links():
 
 
 def test_website_link_first():
-    ## The port's name as PortMaster cleans it, which is the name the website uses.
+    ## The port's name as Volkyport cleans it, which is the name the website uses.
     result = links([{'name': 'Steam', 'gameurl': 'https://store.steampowered.com/app/1/'}], website=True, name="Cave Story+.zip")
-    assert result[0] == ("PortMaster website", 'website', "https://portmaster.games/detail.html?name=cave.story")
+    assert result[0] == ("Volkyport website", 'website', "https://volkyport.games/detail.html?name=cave.story")
     assert result[1][0] == "Steam"
 
 
@@ -115,8 +115,8 @@ def test_links_screen(links_gui, monkeypatch):
     assert gui.scene_list()[-1] == "port_links"
 
     scene = gui.scenes[-1][1][-1]
-    assert scene.tags['links_list'].list == ["PortMaster website", "Steam", "Steam: developer"]
-    assert gui.get_data("port_links.url") == "https://portmaster.games/detail.html?name=sprout"
+    assert scene.tags['links_list'].list == ["Volkyport website", "Steam", "Steam: developer"]
+    assert gui.get_data("port_links.url") == "https://volkyport.games/detail.html?name=sprout"
     assert gui.images.load("qr:" + gui.get_data("port_links.url")) is not None
 
     press(gui, monkeypatch, 'DOWN')
@@ -163,7 +163,7 @@ def test_theme_without_links_section(links_gui, monkeypatch, tmp_path):
     assert (tmp_path / "links.png").stat().st_size > 0
     from pugwash.scenes.base import plain_font
     assert gui.theme_data["port_links"]["links_list"]["font"] == plain_font()
-    assert gui.scenes[-1][1][-1].tags['links_list'].list[0] == "PortMaster website"
+    assert gui.scenes[-1][1][-1].tags['links_list'].list[0] == "Volkyport website"
 
 
 ################################################################################
@@ -261,7 +261,7 @@ def old_theme(links_gui):
     import harbourmaster
     from conftest import PM_DIR
 
-    theme_dir = harbourmaster.HM_TOOLS_DIR / "PortMaster" / "themes" / "Old Theme"
+    theme_dir = harbourmaster.HM_TOOLS_DIR / "Volkyport" / "themes" / "Old Theme"
     shutil.copytree(str(PM_DIR / "pylibs" / "default_theme"), str(theme_dir))
     data = json.loads((theme_dir / "theme.json").read_text())
     data["#info"]["name"] = "Old Theme"
@@ -294,7 +294,7 @@ def test_old_theme_gets_themed_screens(old_theme, monkeypatch, tmp_path):
     port_info_scene(gui, "sprout.zip")
     press(gui, monkeypatch, 'X')
     assert gui.scene_list()[-1] == "port_links"
-    assert gui.scenes[-1][1][-1].tags['links_list'].list[0] == "PortMaster website"
+    assert gui.scenes[-1][1][-1].tags['links_list'].list[0] == "Volkyport website"
 
     gui.push_scene('theme-editor', scenes.ThemeServerScene(gui, start=False))
     gui.do_loop(no_delay=True)

@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: MIT
 #
-# PortMaster/funcs.txt, which ports source for pm_message & co.
+# Volkyport/funcs.txt, which ports source for pm_message & co.
 #
-# It runs against a fake controlfolder: PortMasterDialog.txt (the pugwash fallback)
+# It runs against a fake controlfolder: VolkyportDialog.txt (the pugwash fallback)
 # and portmsg are fakes that write what they were asked to do into calls.txt.
 
 import os
@@ -22,14 +22,14 @@ LOG = 'echo "$(basename "$0") $*" >> "$FAKE_CALLS"\n'
 
 @pytest.fixture
 def funcs(tmp_path):
-    pm = tmp_path / "PortMaster"
+    pm = tmp_path / "Volkyport"
     pm.mkdir()
     shutil.copy(str(PM_DIR / "funcs.txt"), str(pm / "funcs.txt"))
     (pm / "version").write_text("2026-10-13_0069\n")
-    (pm / "PortMasterDialog.txt").write_text(
-        'PortMasterDialogInit() { echo "PortMasterDialogInit $*" >> "$FAKE_CALLS"; }\n'
-        'PortMasterDialog() { echo "PortMasterDialog $*" >> "$FAKE_CALLS"; }\n'
-        'PortMasterDialogExit() { echo "PortMasterDialogExit" >> "$FAKE_CALLS"; }\n')
+    (pm / "VolkyportDialog.txt").write_text(
+        'VolkyportDialogInit() { echo "VolkyportDialogInit $*" >> "$FAKE_CALLS"; }\n'
+        'VolkyportDialog() { echo "VolkyportDialog $*" >> "$FAKE_CALLS"; }\n'
+        'VolkyportDialogExit() { echo "VolkyportDialogExit" >> "$FAKE_CALLS"; }\n')
 
     calls = tmp_path / "calls.txt"
 
@@ -82,9 +82,9 @@ def test_pm_library_path(funcs, arch, port_32bit, ld_path, expected_libs, expect
     pm = output.split("PM=", 1)[1].split("\n", 1)[0]
     ld = output.split("LD=", 1)[1].split("\n", 1)[0]
 
-    ## In the controlfolder (the fixture's fake PortMaster folder).
+    ## In the controlfolder (the fixture's fake Volkyport folder).
     folder = pm.split(":")[0].rsplit("/", 1)[0]
-    assert folder.endswith("/PortMaster")
+    assert folder.endswith("/Volkyport")
     libs = ":".join(f"{folder}/{name}" for name in expected_libs.split(":"))
     assert pm == libs
     ## No empty entry (which would mean the current folder) when LD_LIBRARY_PATH was empty.
@@ -92,7 +92,7 @@ def test_pm_library_path(funcs, arch, port_32bit, ld_path, expected_libs, expect
 
 
 def test_pm_library_path_folders_ship():
-    ## The folders are in the checkout (and so in PortMaster.zip) for every architecture.
+    ## The folders are in the checkout (and so in Volkyport.zip) for every architecture.
     for arch in ("aarch64", "armhf", "x86_64"):
         assert (PM_DIR / f"libs.{arch}").is_dir()
 
@@ -121,7 +121,7 @@ def test_pm_message_falls_back_to_pugwash(funcs):
     ## No portmsg for this device's architecture.
     output, calls = funcs('pm_message "Loading"')
     assert "Loading" in output
-    assert calls == ["PortMasterDialogInit no-harbour", "PortMasterDialog messages_begin", "PortMasterDialog message Loading"]
+    assert calls == ["VolkyportDialogInit no-harbour", "VolkyportDialog messages_begin", "VolkyportDialog message Loading"]
 
 
 ################################################################################

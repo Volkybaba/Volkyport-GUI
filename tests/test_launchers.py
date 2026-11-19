@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: MIT
 #
-# The launchers: PortMaster.sh and <cfw>/PortMaster.txt are stubs that find
-# $controlfolder and source utils/pm_launch.txt (with <cfw>/launch_hooks.txt).
+# The launchers: Volkyport.sh and <cfw>/Volkyport.txt are stubs that find
+# $controlfolder and source utils/vp_launch.txt (with <cfw>/launch_hooks.txt).
 #
-# pm_launch.txt runs here against a fake controlfolder: control.txt, pugwash,
-# PortMasterDialog.txt and the system tools (systemctl, sudo, ...) are fakes that
+# vp_launch.txt runs here against a fake controlfolder: control.txt, pugwash,
+# VolkyportDialog.txt and the system tools (systemctl, sudo, ...) are fakes that
 # write what they were asked to do into calls.txt.
 
 import os
@@ -17,18 +17,18 @@ import pytest
 
 from conftest import PM_DIR
 
-## stub file -> hooks folder it passes to pm_launch.txt (None: generic)
+## stub file -> hooks folder it passes to vp_launch.txt (None: generic)
 STUBS = {
-    "PortMaster.sh": None,
-    "muos/PortMaster.txt": "muos",
-    "miyoo/PortMaster.txt": "miyoo",
-    "spruce/PortMaster.txt": "spruce",
-    "trimui/PortMaster.txt": "trimui",
-    "retrodeck/PortMaster.txt": "retrodeck",
+    "Volkyport.sh": None,
+    "muos/Volkyport.txt": "muos",
+    "miyoo/Volkyport.txt": "miyoo",
+    "spruce/Volkyport.txt": "spruce",
+    "trimui/Volkyport.txt": "trimui",
+    "retrodeck/Volkyport.txt": "retrodeck",
     }
 
 SHELL_FILES = [
-    "utils/pm_launch.txt",
+    "utils/vp_launch.txt",
     *STUBS,
     *(f"{cfw}/launch_hooks.txt" for cfw in STUBS.values() if cfw is not None),
     ]
@@ -48,14 +48,14 @@ LOG = 'echo "$(basename "$0") $*" >> "$FAKE_CALLS"\n'
 class Launcher:
     def __init__(self, tmp_path):
         self.root = tmp_path
-        self.pm = tmp_path / "data" / "PortMaster"
+        self.pm = tmp_path / "data" / "Volkyport"
         self.calls_file = tmp_path / "calls.txt"
         self.ports_dir = tmp_path / "roms" / "ports"
         self.bin = tmp_path / "bin"
 
         pm = self.pm
         (pm / "utils").mkdir(parents=True)
-        shutil.copy(PM_DIR / "utils" / "pm_launch.txt", pm / "utils" / "pm_launch.txt")
+        shutil.copy(PM_DIR / "utils" / "vp_launch.txt", pm / "utils" / "vp_launch.txt")
         for cfw in STUBS.values():
             if cfw is not None:
                 (pm / cfw).mkdir()
@@ -79,11 +79,11 @@ class Launcher:
             'if [ -f "$FAKE_REBOOT_ONCE" ]; then rm -f "$FAKE_REBOOT_ONCE"; touch .pugwash-reboot; fi\n'
             ))
 
-        (pm / "PortMasterDialog.txt").write_text(
-            'PortMasterIPCheck() { echo "$FAKE_GW"; }\n'
-            'PortMasterDialogInit() { echo "PortMasterDialogInit $*" >> "$FAKE_CALLS"; }\n'
-            'PortMasterDialog() { echo "PortMasterDialog $*" >> "$FAKE_CALLS"; }\n'
-            'PortMasterDialogExit() { echo "PortMasterDialogExit" >> "$FAKE_CALLS"; }\n'
+        (pm / "VolkyportDialog.txt").write_text(
+            'VolkyportIPCheck() { echo "$FAKE_GW"; }\n'
+            'VolkyportDialogInit() { echo "VolkyportDialogInit $*" >> "$FAKE_CALLS"; }\n'
+            'VolkyportDialog() { echo "VolkyportDialog $*" >> "$FAKE_CALLS"; }\n'
+            'VolkyportDialogExit() { echo "VolkyportDialogExit" >> "$FAKE_CALLS"; }\n'
             )
 
         write_exe(pm / "muos" / "image_smash.txt", LOG)
@@ -113,14 +113,14 @@ class Launcher:
             }
 
     def run(self, cfw=None, stub=None, **env):
-        """Runs `stub` (a launcher file), or sources pm_launch.txt for `cfw` as its stub would."""
+        """Runs `stub` (a launcher file), or sources vp_launch.txt for `cfw` as its stub would."""
         run_env = dict(self.env)
         run_env.update(env)
 
         if stub is not None:
             command = ["bash", str(self.sandboxed(PM_DIR / stub))]
         else:
-            command = ["bash", "-c", f'controlfolder="{self.pm}"; source "$controlfolder/utils/pm_launch.txt" {cfw or ""}; exit $?']
+            command = ["bash", "-c", f'controlfolder="{self.pm}"; source "$controlfolder/utils/vp_launch.txt" {cfw or ""}; exit $?']
 
         result = subprocess.run(
             command, env=run_env, cwd=str(self.root), timeout=60,
@@ -133,7 +133,7 @@ class Launcher:
     OGA_RESTART = "systemctl restart oga_events"
 
     ## Where the generic stub looks before $XDG_DATA_HOME: on a real ArkOS / dArkOS
-    ## device these exist, and the test would run the device's own PortMaster.
+    ## device these exist, and the test would run the device's own Volkyport.
     DEVICE_PATHS = ("/opt/system/Tools/", "/opt/tools/", "/roms/ports/")
 
     def sandboxed(self, stub):
@@ -188,13 +188,13 @@ def test_shellcheck_errors():
 def test_stub_sources_shared_launcher(stub, cfw):
     lines = [line.strip() for line in (PM_DIR / stub).read_text().splitlines() if line.strip()]
 
-    expected = 'source "$controlfolder/utils/pm_launch.txt"'
+    expected = 'source "$controlfolder/utils/vp_launch.txt"'
     if cfw is not None:
         expected += f" {cfw}"
         assert (PM_DIR / cfw / "launch_hooks.txt").is_file()
 
     ## Exits on the same line: bash reads scripts as it goes, nothing after it may run,
-    ## even if an update replaced this file while PortMaster was running.
+    ## even if an update replaced this file while Volkyport was running.
     assert lines[-1] == expected + "; exit $?"
     assert sum(1 for line in lines if not line.startswith('#')) < 15, "stubs only find $controlfolder"
 
@@ -202,7 +202,7 @@ def test_stub_sources_shared_launcher(stub, cfw):
 ## -- generic launcher (ArkOS, ROCKNIX, ...)
 
 def test_generic_stub_runs_gui(launcher):
-    calls = launcher.run(stub="PortMaster.sh")
+    calls = launcher.run(stub="Volkyport.sh")
 
     assert calls == ["get_controls", "pugwash "]
     assert launcher.oga_restarted
@@ -218,10 +218,10 @@ def test_generic_without_oga_events(launcher):
 
 
 def test_stub_overwritten_while_running(launcher):
-    ## An older harbourmaster updating PortMaster from the GUI overwrites the running
+    ## An older harbourmaster updating Volkyport from the GUI overwrites the running
     ## launcher in place. Bash then reads on from where it was, in the new file.
-    stub = launcher.root / "PortMaster.sh"
-    shutil.copy(str(launcher.sandboxed(PM_DIR / "PortMaster.sh")), str(stub))
+    stub = launcher.root / "Volkyport.sh"
+    shutil.copy(str(launcher.sandboxed(PM_DIR / "Volkyport.sh")), str(stub))
 
     write_exe(launcher.pm / "pugwash", LOG + (
         f'printf "%0{stub.stat().st_size + 100}d\\necho SHOULD-NOT-RUN >> \\"$FAKE_CALLS\\"\\n" 0 > "{stub}"\n'))
@@ -241,8 +241,8 @@ def test_generic_restarts_gui_on_request(launcher):
     assert not (launcher.pm / ".pugwash-reboot").exists()
 
 
-def test_generic_portmaster_cmds(launcher):
-    assert "pugwash --debug" in launcher.run(PORTMASTER_CMDS="--debug")
+def test_generic_volkyport_cmds(launcher):
+    assert "pugwash --debug" in launcher.run(VOLKYPORT_CMDS="--debug")
 
 
 @pytest.mark.parametrize("marker, command", [
@@ -264,7 +264,7 @@ def test_generic_no_autoinstall_files(launcher):
 
     calls = launcher.run()
 
-    assert not any(call.startswith("PortMasterDialog") for call in calls)
+    assert not any(call.startswith("VolkyportDialog") for call in calls)
     ## Both directories exist afterwards, so users can find them.
     assert (launcher.ports_dir / "autoinstall").is_dir()
 
@@ -278,9 +278,9 @@ def test_generic_autoinstall(launcher):
     pm_dir = launcher.pm / "autoinstall"
     ports_dir = "/" + str(launcher.ports_dir / "autoinstall")
     assert calls[1:4] == [
-        "PortMasterDialogInit no-check",
-        f"PortMasterDialog autoinstall {pm_dir} {ports_dir}",
-        "PortMasterDialogExit",
+        "VolkyportDialogInit no-check",
+        f"VolkyportDialog autoinstall {pm_dir} {ports_dir}",
+        "VolkyportDialogExit",
         ]
     assert "pugwash " in calls[4:]
 
@@ -328,7 +328,7 @@ def test_spruce_runs_once_after_autoinstall(launcher):
     ## (On a real spruce device its python3 exists, keep the test off it.)
     calls = launcher.run("spruce", PM_PYTHON=str(launcher.root / "no-python"))
 
-    assert f"PortMasterDialog autoinstall {launcher.pm / 'autoinstall'} {launcher.ports_dir / 'autoinstall'}" in calls
+    assert f"VolkyportDialog autoinstall {launcher.pm / 'autoinstall'} {launcher.ports_dir / 'autoinstall'}" in calls
     assert calls.count("pugwash ") == 1
 
 
@@ -340,18 +340,18 @@ def test_spruce_autoinstall_from_roms_ports(launcher):
 
     calls = launcher.run("spruce", PM_PYTHON=str(launcher.root / "no-python"))
     assert (roms / "ports" / "autoinstall").is_dir()
-    assert not any(call.startswith("PortMasterDialog autoinstall") for call in calls)
+    assert not any(call.startswith("VolkyportDialog autoinstall") for call in calls)
 
     (roms / "ports" / "autoinstall" / "port.zip").write_bytes(b"zip")
 
     calls = launcher.run("spruce", PM_PYTHON=str(launcher.root / "no-python"))
-    assert f"PortMasterDialog autoinstall {launcher.pm / 'autoinstall'} {roms / 'ports' / 'autoinstall'}" in calls
+    assert f"VolkyportDialog autoinstall {launcher.pm / 'autoinstall'} {roms / 'ports' / 'autoinstall'}" in calls
 
 
 def test_miyoo(launcher):
     calls = launcher.run("miyoo")
 
-    assert "pm_message Starting PortMaster." in calls
+    assert "pm_message Starting Volkyport." in calls
     assert calls.count("pugwash ") == 1
 
 
@@ -362,7 +362,7 @@ def test_retrodeck(launcher):
 
 
 def test_retrodeck_reload_disabled(launcher):
-    calls = launcher.run("retrodeck", FAKE_MARKERS=launcher.markers(".es-de-refresh"), portmaster_reload_esde="false")
+    calls = launcher.run("retrodeck", FAKE_MARKERS=launcher.markers(".es-de-refresh"), volkyport_reload_esde="false")
 
     assert "pkill -f es-de" not in calls
 
@@ -379,16 +379,16 @@ def test_spruce_uses_its_own_python(launcher):
 
 def test_sandboxed_stub_keeps_its_logic(launcher):
     ## Only the paths move: the copy must still be the real stub otherwise.
-    copy = launcher.sandboxed(PM_DIR / "PortMaster.sh").read_text()
-    original = (PM_DIR / "PortMaster.sh").read_text()
+    copy = launcher.sandboxed(PM_DIR / "Volkyport.sh").read_text()
+    original = (PM_DIR / "Volkyport.sh").read_text()
 
     assert copy.count("\n") == original.count("\n")
-    assert "/opt/system/Tools/PortMaster/" in copy
+    assert "/opt/system/Tools/Volkyport/" in copy
     assert '"/opt/system/Tools/' not in copy
     assert copy.splitlines()[-1] == original.splitlines()[-1]
 
 
-## -- PM_LAUNCH_ENV_ONLY: the GUI's environment, nothing run (the PortMaster Test Suite uses it)
+## -- PM_LAUNCH_ENV_ONLY: the GUI's environment, nothing run (the Volkyport Test Suite uses it)
 
 @pytest.mark.parametrize("cfw, sdl_path", [
     (None, "/usr/lib"),
@@ -402,7 +402,7 @@ def test_env_only(launcher, cfw, sdl_path):
     assert not any(call.startswith("pugwash") for call in calls)
 
     result = subprocess.run(
-        ["bash", "-c", f'controlfolder="{launcher.pm}"; source "$controlfolder/utils/pm_launch.txt" {cfw or ""}; echo "SDL=$PYSDL2_DLL_PATH"'],
+        ["bash", "-c", f'controlfolder="{launcher.pm}"; source "$controlfolder/utils/vp_launch.txt" {cfw or ""}; echo "SDL=$PYSDL2_DLL_PATH"'],
         env=dict(launcher.env, PM_LAUNCH_ENV_ONLY="Y"), cwd=str(launcher.root), timeout=60,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
 
@@ -410,15 +410,15 @@ def test_env_only(launcher, cfw, sdl_path):
 
 
 def test_spruce_gui_env_keeps_its_sdl(launcher):
-    ## spruce's pm_hook_env picks the SDL2 (the card's spruce/portmaster/portmaster.txt),
+    ## spruce's pm_hook_env picks the SDL2 (the card's spruce/volkyport/volkyport.txt),
     ## pm_hook_gui_env must leave it. A fake card file, so a real spruce device's doesn't count.
-    card = launcher.root / "card-portmaster.txt"
+    card = launcher.root / "card-volkyport.txt"
     card.write_text('export PYSDL2_DLL_PATH="/card/lib/"\n')
     hooks = launcher.pm / "spruce" / "launch_hooks.txt"
-    hooks.write_text(hooks.read_text().replace("/mnt/SDCARD/spruce/portmaster/portmaster.txt", str(card)))
+    hooks.write_text(hooks.read_text().replace("/mnt/SDCARD/spruce/volkyport/volkyport.txt", str(card)))
 
     result = subprocess.run(
-        ["bash", "-c", f'controlfolder="{launcher.pm}"; source "$controlfolder/utils/pm_launch.txt" spruce; echo "SDL=$PYSDL2_DLL_PATH"'],
+        ["bash", "-c", f'controlfolder="{launcher.pm}"; source "$controlfolder/utils/vp_launch.txt" spruce; echo "SDL=$PYSDL2_DLL_PATH"'],
         env=dict(launcher.env, PM_LAUNCH_ENV_ONLY="Y"), cwd=str(launcher.root), timeout=60,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
 

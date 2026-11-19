@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# Builds a PortMaster release into dist/, from a clean copy of the sources: the
+# Builds a Volkyport release into dist/, from a clean copy of the sources: the
 # checkout itself is never changed.
 #
 #   ./do_release.sh [alpha|beta|stable] [version]
@@ -11,7 +11,7 @@
 #       workflow downloads the latest one there) or downloads it.
 #
 #   ./do_release.sh testsuite [version]
-#       A test build plus dist/pmtest.zip, the "PortMaster Test Suite" port for testers
+#       A test build plus dist/pmtest.zip, the "Volkyport Test Suite" port for testers
 #       (tools/test_suite): it installs that build, runs every test and saves a report.
 #
 #   ./do_release.sh test [version]
@@ -19,8 +19,8 @@
 #       YYYY-MM-DD_XX69 (2026-10-13_0069, then _0169, ...): it never clashes with a
 #       release, and shows it is a test build. No version.json, no installers.
 #
-# Writes dist/PortMaster.zip and dist/version, and for stable (or MAKE_INSTALL=Y)
-# dist/Install.PortMaster.sh and the Full installers (unless NO_FULL_INSTALL=Y).
+# Writes dist/Volkyport.zip and dist/version, and for stable (or MAKE_INSTALL=Y)
+# dist/Install.Volkyport.sh and the Full installers (unless NO_FULL_INSTALL=Y).
 #
 #   PM_DIST_DIR      where to put it all (default: ./dist)
 #   PM_CACHE_DIR     downloads (makeself, runtimes), kept between builds (default: ./.cache/release)
@@ -103,7 +103,7 @@ for tool in zip python3; do
   fi
 done
 
-echo "Building PortMaster $VERSION ($CHANNEL)"
+echo "Building Volkyport $VERSION ($CHANNEL)"
 
 BUILD_DIR="$(mktemp -d "${TMPDIR:-/tmp}/pm-release.XXXXXX")"
 trap 'rm -rf "$BUILD_DIR"' EXIT
@@ -116,25 +116,25 @@ trap 'rm -rf "$BUILD_DIR"' EXIT
 cd "$REPO_DIR"
 if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
   {
-    git ls-files -z --cached --others --exclude-standard -- PortMaster tools tests pytest.ini
+    git ls-files -z --cached --others --exclude-standard -- Volkyport tools tests pytest.ini
   } | while IFS= read -r -d '' file_name; do
     ## (tracked files deleted on disk are still listed)
     [ -f "$file_name" ] && printf '%s\0' "$file_name"
   done | tar -cf - --null -T - | tar -xf - -C "$BUILD_DIR"
 else
-  tar -cf - --exclude='__pycache__' --exclude='.DS_Store' --exclude='._*' PortMaster tools tests pytest.ini | tar -xf - -C "$BUILD_DIR"
+  tar -cf - --exclude='__pycache__' --exclude='.DS_Store' --exclude='._*' Volkyport tools tests pytest.ini | tar -xf - -C "$BUILD_DIR"
 fi
 
 cd "$BUILD_DIR"
 
 ## -- Version -----------------------------------------------------------------------
-python3 tools/pm_release.py "$STAMP_CHANNEL" "$VERSION"
-echo "$VERSION" > PortMaster/version
+python3 tools/vp_release.py "$STAMP_CHANNEL" "$VERSION"
+echo "$VERSION" > Volkyport/version
 
 ## -- The zips ----------------------------------------------------------------------
 echo "Creating pylibs.zip"
 (
-  cd PortMaster
+  cd Volkyport
   zip -9qr pylibs.zip exlibs/ pylibs/ \
       -x '*__pycache__*' \
       -x '*.DS_Store' \
@@ -142,19 +142,19 @@ echo "Creating pylibs.zip"
       -x '*NotoSans*.ttf'
 )
 
-echo "Creating PortMaster.zip"
-zip -9qr PortMaster.zip PortMaster/ \
-    -x 'PortMaster/pylibs/*' \
-    -x 'PortMaster/exlibs/*' \
-    -x 'PortMaster/config/*' \
-    -x 'PortMaster/themes/*' \
-    -x 'PortMaster/libs/*.squashfs' \
-    -x 'PortMaster/libs/*.squashfs.md5' \
-    -x 'PortMaster/pugwash.bak' \
-    -x 'PortMaster/log.txt' \
-    -x 'PortMaster/pugwash.txt' \
-    -x 'PortMaster/harbourmaster.txt' \
-    -x 'PortMaster/*_flag' \
+echo "Creating Volkyport.zip"
+zip -9qr Volkyport.zip Volkyport/ \
+    -x 'Volkyport/pylibs/*' \
+    -x 'Volkyport/exlibs/*' \
+    -x 'Volkyport/config/*' \
+    -x 'Volkyport/themes/*' \
+    -x 'Volkyport/libs/*.squashfs' \
+    -x 'Volkyport/libs/*.squashfs.md5' \
+    -x 'Volkyport/pugwash.bak' \
+    -x 'Volkyport/log.txt' \
+    -x 'Volkyport/pugwash.txt' \
+    -x 'Volkyport/harbourmaster.txt' \
+    -x 'Volkyport/*_flag' \
     -x '*__pycache__*' \
     -x '*.DS_Store' \
     -x '*/._*'
@@ -177,9 +177,9 @@ if [ "$CHANNEL" = "stable" ] || [ "${MAKE_INSTALL:-}" = "Y" ]; then
   fi
 
   mkdir -p pm_release
-  cp PortMaster.zip tools/installer.sh pm_release/
+  cp Volkyport.zip tools/installer.sh pm_release/
 
-  "$MAKESELF" --header tools/makeself-header.sh pm_release "Install.PortMaster.sh" "PortMaster Installer" ./installer.sh
+  "$MAKESELF" --header tools/makeself-header.sh pm_release "Install.Volkyport.sh" "Volkyport Installer" ./installer.sh
 
   if [ -z "${NO_FULL_INSTALL:-}" ]; then
     for arch in aarch64 x86_64; do
@@ -195,15 +195,15 @@ if [ "$CHANNEL" = "stable" ] || [ "${MAKE_INSTALL:-}" = "Y" ]; then
       fi
 
       cp "$CACHE_DIR/runtimes.$arch.zip" pm_release/runtimes.zip
-      "$MAKESELF" --header tools/makeself-header.sh pm_release "Install.Full${SCRIPT_NAME}.PortMaster.sh" "PortMaster Full Installer" ./installer.sh
+      "$MAKESELF" --header tools/makeself-header.sh pm_release "Install.Full${SCRIPT_NAME}.Volkyport.sh" "Volkyport Full Installer" ./installer.sh
     done
   fi
 
-  rm -f "$DIST_DIR"/Install*PortMaster.sh
-  cp Install*PortMaster.sh "$DIST_DIR/"
+  rm -f "$DIST_DIR"/Install*Volkyport.sh
+  cp Install*Volkyport.sh "$DIST_DIR/"
 fi
 
-## -- The PortMaster Test Suite port -------------------------------------------------
+## -- The Volkyport Test Suite port -------------------------------------------------
 if [ "$CHANNEL" = "testsuite" ]; then
   echo "Creating pmtest.zip"
 
@@ -220,9 +220,9 @@ if [ "$CHANNEL" = "testsuite" ]; then
 
   PMTEST="pmtest_build/pmtest"
   mkdir -p "$PMTEST/site" "$PMTEST/tree" "$PMTEST/reports"
-  cp "tools/test_suite/PortMaster Test Suite.sh" pmtest_build/
+  cp "tools/test_suite/Volkyport Test Suite.sh" pmtest_build/
   cp tools/test_suite/pmtest/*.py tools/test_suite/pmtest/port.json "$PMTEST/"
-  cp PortMaster.zip "$PMTEST/"
+  cp Volkyport.zip "$PMTEST/"
   touch "$PMTEST/reports/.keep"
   if [ -n "${PM_PMTEST_UPLOAD:-}" ]; then
     echo "$PM_PMTEST_UPLOAD" > "$PMTEST/upload.txt"
@@ -234,22 +234,22 @@ if [ "$CHANNEL" = "testsuite" ]; then
 
   ## The code under test, as stamped above, without what the tests never touch.
   tar -cf - \
-      --exclude='PortMaster/runtimes' --exclude='PortMaster/libs' --exclude='PortMaster/utils/patcher' \
-      --exclude='PortMaster/7zzs.*' --exclude='PortMaster/innoextract.*' --exclude='PortMaster/astcenc.*' \
-      --exclude='PortMaster/xdelta3*' --exclude='PortMaster/gptokeyb*' --exclude='PortMaster/sdl2imgshow*' \
-      --exclude='PortMaster/portmsg.*' --exclude='PortMaster/*.so' --exclude='PortMaster/pylibs.zip' \
+      --exclude='Volkyport/runtimes' --exclude='Volkyport/libs' --exclude='Volkyport/utils/patcher' \
+      --exclude='Volkyport/7zzs.*' --exclude='Volkyport/innoextract.*' --exclude='Volkyport/astcenc.*' \
+      --exclude='Volkyport/xdelta3*' --exclude='Volkyport/gptokeyb*' --exclude='Volkyport/sdl2imgshow*' \
+      --exclude='Volkyport/portmsg.*' --exclude='Volkyport/*.so' --exclude='Volkyport/pylibs.zip' \
       --exclude='NotoSans.tar.xz' --exclude='__pycache__' \
-      PortMaster tests tools pytest.ini | tar -xf - -C "$PMTEST/tree"
+      Volkyport tests tools pytest.ini | tar -xf - -C "$PMTEST/tree"
   ## What the suite keeps when it starts: installing over an older suite leaves its files.
   (cd "$PMTEST" && find tree site -type f ! -path '*/__pycache__/*' | LC_ALL=C sort > files.txt)
 
-  (cd pmtest_build && zip -9qr ../pmtest.zip "PortMaster Test Suite.sh" pmtest)
+  (cd pmtest_build && zip -9qr ../pmtest.zip "Volkyport Test Suite.sh" pmtest)
   cp pmtest.zip "$DIST_DIR/"
   ## harbourmaster checks it when installing <url>/pmtest.zip.md5
   (cd "$DIST_DIR" && md5sum pmtest.zip > pmtest.zip.md5)
 fi
 
-## -- version.json: what each channel's PortMaster updates to -----------------------
+## -- version.json: what each channel's Volkyport updates to -----------------------
 if [ -n "$IS_TEST" ]; then
   echo "$VERSION" > version
 
@@ -258,17 +258,17 @@ else
   if [ -f "$VERSION_JSON" ]; then
     cp "$VERSION_JSON" version.json
   else
-    curl -fL -o version.json "https://github.com/PortsMaster/PortMaster-GUI/releases/latest/download/version.json"
+    curl -fL -o version.json "https://github.com/Volkybaba/PortMaster-GUI/releases/latest/download/version.json"
   fi
 
-  python3 tools/pm_version.py "$CHANNEL" "$VERSION"
+  python3 tools/vp_version.py "$CHANNEL" "$VERSION"
   cp version.json "$DIST_DIR/version.json"
 fi
 
-cp PortMaster.zip version "$DIST_DIR/"
+cp Volkyport.zip version "$DIST_DIR/"
 
 if [ -n "$IS_TEST" ]; then
   echo "$VERSION" >> "$TEST_BUILDS"
 fi
 
-echo "Built PortMaster $VERSION ($CHANNEL) in $DIST_DIR"
+echo "Built Volkyport $VERSION ($CHANNEL) in $DIST_DIR"

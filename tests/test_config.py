@@ -68,11 +68,11 @@ def test_git_checkout_is_testing_mode(tmp_path):
 
 
 def test_git_checkout_from_subdir_is_testing_mode(tmp_path):
-    ## Running from PortMaster/ inside a checkout chdirs up a level.
+    ## Running from Volkyport/ inside a checkout chdirs up a level.
     (tmp_path / ".git").mkdir()
-    (tmp_path / "PortMaster").mkdir()
+    (tmp_path / "Volkyport").mkdir()
 
-    result = run_config(tmp_path / "PortMaster")
+    result = run_config(tmp_path / "Volkyport")
 
     assert result['testing'] is True
     assert result['tools'] == str(tmp_path)
@@ -110,13 +110,13 @@ def test_detect_git_checkout(tmp_path):
 def test_detect_spruce(tmp_path):
     make_dirs(tmp_path, "/mnt/SDCARD/spruce")
     assert detect(tmp_path)[:3] == (
-        Path("/mnt/SDCARD/Persistent/portmaster"), Path("/mnt/SDCARD/Roms/ports"), Path("/mnt/SDCARD/Roms/ports"))
+        Path("/mnt/SDCARD/Persistent/volkyport"), Path("/mnt/SDCARD/Roms/ports"), Path("/mnt/SDCARD/Roms/ports"))
 
 
 def test_detect_trimui(tmp_path):
-    make_dirs(tmp_path, "/mnt/SDCARD/Apps/PortMaster")
+    make_dirs(tmp_path, "/mnt/SDCARD/Apps/Volkyport")
     assert detect(tmp_path)[:3] == (
-        Path("/mnt/SDCARD/Apps/PortMaster"), Path("/mnt/SDCARD/Data/ports"), Path("/mnt/SDCARD/Data/ports"))
+        Path("/mnt/SDCARD/Apps/Volkyport"), Path("/mnt/SDCARD/Data/ports"), Path("/mnt/SDCARD/Data/ports"))
 
 
 def test_detect_batocera(tmp_path):
@@ -137,8 +137,8 @@ def test_detect_muos_second_card(tmp_path):
 
 
 def test_detect_muos_second_card_with_toggle(tmp_path):
-    make_dirs(tmp_path, "/opt/muos", "/mnt/mmc/MUOS/PortMaster/config")
-    (tmp_path / "mnt/mmc/MUOS/PortMaster/config/muos_mmc_master_race.txt").write_text("")
+    make_dirs(tmp_path, "/opt/muos", "/mnt/mmc/MUOS/Volkyport/config")
+    (tmp_path / "mnt/mmc/MUOS/Volkyport/config/muos_mmc_master_race.txt").write_text("")
     paths = detect(tmp_path, df_output=lambda: "/mnt/sdcard")
     assert paths[:3] == (Path("/mnt/mmc/MUOS"), Path("/mnt/mmc/ports"), Path("/mnt/mmc/ROMS/Ports"))
 
@@ -164,7 +164,7 @@ def test_detect_retrodeck_json(tmp_path):
         {"paths": {"rd_home_path": "/home/deck/retrodeck", "roms_path": "/media/roms"}}))
 
     assert detect(tmp_path)[:3] == (
-        Path("/var/data"), Path("/home/deck/retrodeck/PortMaster/ports"), Path("/media/roms/portmaster"))
+        Path("/var/data"), Path("/home/deck/retrodeck/Volkyport/ports"), Path("/media/roms/volkyport"))
 
 
 def test_detect_retrodeck_json_portmaster_path(tmp_path):
@@ -177,9 +177,9 @@ def test_detect_retrodeck_json_portmaster_path(tmp_path):
 
 
 def test_detect_trimui_miyoo_ex(tmp_path):
-    make_dirs(tmp_path, "/mnt/SDCARD/MIYOO_EX/PortMaster")
+    make_dirs(tmp_path, "/mnt/SDCARD/MIYOO_EX/Volkyport")
     assert detect(tmp_path)[:3] == (
-        Path("/mnt/SDCARD/MIYOO_EX/PortMaster"), Path("/mnt/SDCARD/MIYOO_EX/ports"), Path("/mnt/SDCARD/MIYOO_EX/ports"))
+        Path("/mnt/SDCARD/MIYOO_EX/Volkyport"), Path("/mnt/SDCARD/MIYOO_EX/ports"), Path("/mnt/SDCARD/MIYOO_EX/ports"))
 
 
 def test_detect_retrodeck_json_in_home(tmp_path):
@@ -190,7 +190,7 @@ def test_detect_retrodeck_json_in_home(tmp_path):
         {"paths": {"rd_home_path": "/rd", "ports_path": "/rd/pm"}}))
 
     assert detect(tmp_path)[:3] == (
-        tmp_path / "home/.var/app/net.retrodeck.retrodeck/data", Path("/rd/pm/ports"), Path("/rd/roms/portmaster"))
+        tmp_path / "home/.var/app/net.retrodeck.retrodeck/data", Path("/rd/pm/ports"), Path("/rd/roms/volkyport"))
 
 
 @pytest.mark.parametrize("text", ["{", "[]", '{"paths": {}}', '{"other": 1}'])
@@ -209,7 +209,7 @@ def test_detect_retrodeck_cfg(tmp_path):
     (tmp_path / "var/config/retrodeck/retrodeck.cfg").write_text(
         "[paths]\nrdhome=/rd\nports_folder=/media/pm\nroms_folder=/media/roms\n")
 
-    assert detect(tmp_path)[:3] == (Path("/var/data"), Path("/media/pm/ports"), Path("/media/roms/portmaster"))
+    assert detect(tmp_path)[:3] == (Path("/var/data"), Path("/media/pm/ports"), Path("/media/roms/volkyport"))
 
 
 def test_detect_retrodeck_cfg_in_home_defaults(tmp_path):
@@ -218,7 +218,7 @@ def test_detect_retrodeck_cfg_in_home_defaults(tmp_path):
     (config / "retrodeck.cfg").write_text("rdhome=/rd\n")
 
     assert detect(tmp_path)[:3] == (
-        tmp_path / "home/.var/app/net.retrodeck.retrodeck/data", Path("/rd/PortMaster/ports"), Path("/rd/roms/portmaster"))
+        tmp_path / "home/.var/app/net.retrodeck.retrodeck/data", Path("/rd/Volkyport/ports"), Path("/rd/roms/volkyport"))
 
 
 def test_detect_retrodeck_cfg_without_rdhome_exits(tmp_path):

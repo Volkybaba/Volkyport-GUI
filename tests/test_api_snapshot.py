@@ -53,7 +53,7 @@ AREAS = {
     'pugtheme':               (True,  lambda: __import__("pugwash.theme").theme, ("pugwash.theme",)),
     'pugscene':               (True,  lambda: __import__("pugwash.scenes").scenes, ("pugwash.scenes",)),
     'pugwash script':         (True,  lambda: _merge(*_gui_modules()), _GUI_MODULES),
-    'PortMasterGUI':          (True,  lambda: __import__("pugwash.app").app.PortMasterGUI, None),
+    'VolkyportGUI':          (True,  lambda: __import__("pugwash.app").app.VolkyportGUI, None),
     }
 
 

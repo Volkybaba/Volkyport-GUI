@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# theme_server (PortMaster/pylibs/theme_server): the theme dev server. Its renderer (worker.py, a headless pugwash)
+# theme_server (Volkyport/pylibs/theme_server): the theme dev server. Its renderer (worker.py, a headless pugwash)
 # draws every screen of a theme; serve.py runs renderers, serves the page and exports.
 # These use an empty ports cache, so no network.
 
@@ -40,9 +40,9 @@ def test_screen_capabilities_match_device_info(size, expected, absent):
 
 
 def test_prepare_tools_dir(tmp_path):
-    cache_config = tmp_path / "cache" / "tools" / "PortMaster" / "config"
+    cache_config = tmp_path / "cache" / "tools" / "Volkyport" / "config"
     (cache_config / "images_pm").mkdir(parents=True)
-    (cache_config / "020_portmaster.source.json").write_text("{}")
+    (cache_config / "020_volkyport.source.json").write_text("{}")
     (cache_config / "config.json").write_text(json.dumps({'version': 2, 'theme': "other"}))
     theme = tmp_path / "My Theme"
     theme.mkdir()
@@ -52,24 +52,24 @@ def test_prepare_tools_dir(tmp_path):
     work = tmp_path / "work"
     work.mkdir()
     assert worker.prepare_tools_dir(work, cache_config, theme, "Dark") == "My Theme"
-    config = work / "tools" / "PortMaster" / "config"
-    ## The screenshot folders are linked, the files copied: on a device this is PortMaster's
+    config = work / "tools" / "Volkyport" / "config"
+    ## The screenshot folders are linked, the files copied: on a device this is Volkyport's
     ## own config, which nothing may change. config.json is the renderer's own, with the
     ## version (else harbourmaster "upgrades" it by deleting the image folders) and not a
     ## first run (which writes the default source files).
     assert (config / "images_pm").is_symlink()
-    assert not (config / "020_portmaster.source.json").is_symlink() and (config / "020_portmaster.source.json").read_text() == "{}"
+    assert not (config / "020_volkyport.source.json").is_symlink() and (config / "020_volkyport.source.json").read_text() == "{}"
     cfg = json.loads((config / "config.json").read_text())
     assert (cfg['version'], cfg['theme'], cfg['theme-scheme'], cfg['disclaimer'], cfg['first-run']) == (2, "My Theme", "Dark", True, False)
-    assert (work / "tools" / "PortMaster" / "themes" / "My Theme").resolve() == theme.resolve()
+    assert (work / "tools" / "Volkyport" / "themes" / "My Theme").resolve() == theme.resolve()
 
     ## The built-in theme isn't linked, pugwash finds it by name.
     assert worker.prepare_tools_dir(work, cache_config, DEFAULT_THEME, None) == "default_theme"
-    assert not any((work / "tools" / "PortMaster" / "themes").iterdir())
+    assert not any((work / "tools" / "Volkyport" / "themes").iterdir())
 
 
 def test_ensure_fonts(tmp_path, monkeypatch):
-    ## A fresh checkout has only NotoSans.tar.xz: the PortMaster/pugwash script unpacks
+    ## A fresh checkout has only NotoSans.tar.xz: the Volkyport/pugwash script unpacks
     ## it, and the workers don't run that script.
     import io
     import tarfile
@@ -145,7 +145,7 @@ def pool(tmp_path_factory):
 
     themes = serve.Themes(themes_dir)
     ## Two renderers at most (60-90 MB each): the Test Suite runs this on handhelds too.
-    pool = serve.RenderPool(themes, tmp / "cache" / "tools" / "PortMaster" / "config", tmp / "work", max_workers=2)
+    pool = serve.RenderPool(themes, tmp / "cache" / "tools" / "Volkyport" / "config", tmp / "work", max_workers=2)
     try:
         pool.warm()
     except serve.WorkerError as error:
@@ -198,7 +198,7 @@ def test_missing_sections_and_default_only_screens(pool):
     assert not info['missing'] and info['regions']
     _, info = pool.render("Tiny", None, "640x480", "en_US", "filters")
     assert info['missing'] == "this theme has no filter_list section"
-    ## fifo_control (autoinstall, PortMasterDialog) always uses the default theme.
+    ## fifo_control (autoinstall, VolkyportDialog) always uses the default theme.
     _, info = pool.render("Tiny", None, "640x480", "en_US", "selection_list")
     assert "default theme" in info['missing']
 
@@ -376,9 +376,9 @@ def test_default_theme_layout(pool, tmp_path):
 @pytest.mark.own_display
 def test_port_screens_with_port_data(online_hm, hm_dirs, tmp_path):
     ## online_hm saved tests/data/ports.json's ports into hm_dirs' config: as on a device,
-    ## the renderers take the ports from PortMaster's own config, and leave it as it was.
-    config = hm_dirs['tools_dir'] / "PortMaster" / "config"
-    assert (config / "020_portmaster.source.json").is_file()
+    ## the renderers take the ports from Volkyport's own config, and leave it as it was.
+    config = hm_dirs['tools_dir'] / "Volkyport" / "config"
+    assert (config / "020_volkyport.source.json").is_file()
     before = {path: path.read_bytes() for path in config.rglob("*") if path.is_file()}
     pool = serve.RenderPool(serve.Themes(None), config, tmp_path / "work")
     try:
@@ -454,7 +454,7 @@ def test_translations_save(locales):
 
     ## Only known strings; a new language gets both its files.
     with pytest.raises(KeyError):
-        translations.save("de_DE", "messages", "Not a string PortMaster has", "x")
+        translations.save("de_DE", "messages", "Not a string Volkyport has", "x")
     translations.save("da_DK", "themes", next(iter(serve.i18n_tool.read_strings()['themes'])), "Dansk")
     assert (locales / "da_DK.json").is_file() and (locales / "da_DK.themes.json").is_file()
 
@@ -518,7 +518,7 @@ def test_translate_api(pool, locales):
 
 
 ################################################################################
-## On a device: PortMaster's options start the server (pugwash/scenes/theme_server.py).
+## On a device: Volkyport's options start the server (pugwash/scenes/theme_server.py).
 def test_listen_tries_the_next_ports():
     import socket
 
@@ -626,7 +626,7 @@ def test_managed_server(tmp_path):
         with urllib.request.urlopen(f"http://127.0.0.1:{ready['port']}/api/info", timeout=30) as response:
             assert json.loads(response.read())['themes'][0]['id'] == "default_theme"
 
-        ## PortMaster closing stdin stops it, and it cleans up after itself. (Only its own
+        ## Volkyport closing stdin stops it, and it cleans up after itself. (Only its own
         ## folder: ctypes' find_library can leave gcc's temporary files there too.)
         proc.stdin.close()
         assert proc.wait(timeout=30) == 0
@@ -641,7 +641,7 @@ def test_managed_server(tmp_path):
 @pytest.mark.own_display
 @pytest.mark.parametrize("delay", [0, 0.05, 0.2, 0.5, 1.0])
 def test_managed_server_stopped_while_starting(tmp_path, delay):
-    ## Stopped (B, or PortMaster quitting) while its first renderer is still starting:
+    ## Stopped (B, or Volkyport quitting) while its first renderer is still starting:
     ## that start mustn't carry on into the folder the server has already removed.
     import time
 
@@ -707,7 +707,7 @@ def test_theme_editor_scene(gui, hm_dirs, monkeypatch):
 
 
 def test_screens_listed_without_a_renderer(tmp_path):
-    ## The page's list of screens comes from the catalogue: the server is up (and PortMaster
+    ## The page's list of screens comes from the catalogue: the server is up (and Volkyport
     ## shows its address) before any renderer has started.
     pool = serve.RenderPool(serve.Themes(None), tmp_path / "config", tmp_path / "work")
     shots = pool.shots()

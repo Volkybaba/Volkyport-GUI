@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 #
 # The GUI's menus driven a button at a time on the shared headless GUI, with the
-# PortMaster source from tests/data/ports.json: main menu, ports lists, filters,
+# Volkyport source from tests/data/ports.json: main menu, ports lists, filters,
 # featured ports, options, language and the on screen keyboard.
 
 import json
@@ -124,7 +124,7 @@ def test_main_menu_back_asks_first(scene_gui, main_menu, monkeypatch, answer):
     scene_gui.answer = answer
     press(scene_gui, monkeypatch, 'B')
 
-    assert "exit PortMaster" in scene_gui.boxes[-1]
+    assert "exit Volkyport" in scene_gui.boxes[-1]
     assert scene_gui.cancelled == ([True] if answer else [])
 
 
@@ -394,7 +394,7 @@ def test_featured_breadcrumbs(scene_gui):
 ## Options
 @pytest.fixture
 def options(scene_gui, monkeypatch, tmp_path):
-    ## Options that touch PortMaster's own folder use the HarbourMaster's.
+    ## Options that touch Volkyport's own folder use the HarbourMaster's.
     monkeypatch.setattr(harbourmaster, "HM_TOOLS_DIR", scene_gui.hm.tools_dir)
     return push(scene_gui, 'option', scene_gui.scenes_mod.OptionScene(scene_gui))
 
@@ -408,7 +408,7 @@ def test_options_list(scene_gui, options):
     ids = options.tags['option_list'].options
 
     for option in ('select-language', 'select-theme', 'toggle-music', 'toggle-sfx',
-                   'runtime-manager', 'toggle-experimental', 'update-ports', 'update-portmaster', 'release-channel'):
+                   'runtime-manager', 'toggle-experimental', 'update-ports', 'update-volkyport', 'release-channel'):
         assert option in ids, option
 
     ## The default platform has no gamelist and no secret options yet.
@@ -433,9 +433,9 @@ def test_options_toggles(scene_gui, options, monkeypatch, option, key, label):
     assert option_text(options, option) == before
 
 
-def test_options_update_portmaster(scene_gui, options, monkeypatch):
+def test_options_update_volkyport(scene_gui, options, monkeypatch):
     scene_gui.hm.cfg_data['update_checked'] = "2026-01-01T00:00:00"
-    choose(scene_gui, monkeypatch, 'update-portmaster')
+    choose(scene_gui, monkeypatch, 'update-volkyport')
 
     assert scene_gui.hm.cfg_data['update_checked'] is None
     assert scene_gui.events.running is False
@@ -465,7 +465,7 @@ def test_options_restore_declined(scene_gui, options, monkeypatch):
     installs = []
     monkeypatch.setattr(scene_gui.hm, "install_port", lambda name: installs.append(name))
 
-    choose(scene_gui, monkeypatch, 'restore-portmaster')
+    choose(scene_gui, monkeypatch, 'restore-volkyport')
     assert installs == []
     assert scene_gui.events.running is True
 
@@ -474,16 +474,16 @@ def test_options_restore(scene_gui, options, monkeypatch):
     installs = []
     monkeypatch.setattr(scene_gui.hm, "install_port", lambda name: installs.append(name) or 0)
 
-    choose(scene_gui, monkeypatch, 'restore-portmaster')
-    assert installs == ["restore.portmaster.zip"]
-    assert "Restore PortMaster.sh" in scene_gui.boxes[-2]
+    choose(scene_gui, monkeypatch, 'restore-volkyport')
+    assert installs == ["restore.volkyport.zip"]
+    assert "Restore Volkyport.sh" in scene_gui.boxes[-2]
     assert scene_gui.events.running is False
 
 
 def test_options_restore_failed(scene_gui, options, monkeypatch):
     monkeypatch.setattr(scene_gui.hm, "install_port", lambda name: 255)
 
-    choose(scene_gui, monkeypatch, 'restore-portmaster')
+    choose(scene_gui, monkeypatch, 'restore-volkyport')
     assert scene_gui.events.running is True
 
 
@@ -556,7 +556,7 @@ def test_secret_toggle_all(scene_gui, secret_options, monkeypatch):
     ('toggle-debug', "debug_all_the_things_flag", "Debug Mode: "),
     ])
 def test_secret_flags(scene_gui, secret_options, monkeypatch, option, flag, label):
-    flag_file = scene_gui.hm.tools_dir / "PortMaster" / flag
+    flag_file = scene_gui.hm.tools_dir / "Volkyport" / flag
 
     choose(scene_gui, monkeypatch, option)
     assert flag_file.is_file()
@@ -595,7 +595,7 @@ def test_secret_delete_config_already_gone(scene_gui, secret_options, monkeypatc
 
 
 def test_options_gcd_toggle(scene_gui, monkeypatch):
-    backup = scene_gui.hm.tools_dir / "PortMaster" / ".Backup"
+    backup = scene_gui.hm.tools_dir / "Volkyport" / ".Backup"
     backup.mkdir(parents=True)
     (backup / "donottouch.txt").write_text("# Standard\n")
     (backup / "donottouch_x.txt").write_text("# Xbox 360 Layout\n")
@@ -645,7 +645,7 @@ def test_options_trimui_port_mode(scene_gui, monkeypatch):
     assert option_text(scene, 'trimui-port-mode-toggle') == "Ports Location: Ports tab"
     assert moved == [True]
     ## No restore on TrimUI.
-    assert 'restore-portmaster' not in scene.tags['option_list'].options
+    assert 'restore-volkyport' not in scene.tags['option_list'].options
 
 
 ################################################################################

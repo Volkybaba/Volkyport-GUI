@@ -304,7 +304,7 @@ def test_saves_at_once_all_land(server, locales):
     ({'lang': "de_DE", 'domain': "nope", 'text': "Options", 'translation': "x"}, 400),
     ({'lang': "de_DE", 'domain': "messages", 'text': 5, 'translation': "x"}, 400),
     ({'lang': "de_DE", 'domain': "messages", 'text': "Options", 'translation': None}, 400),
-    ({'lang': "de_DE", 'domain': "messages", 'text': "Not a PortMaster string", 'translation': "x"}, 404),
+    ({'lang': "de_DE", 'domain': "messages", 'text': "Not a Volkyport string", 'translation': "x"}, 404),
     ([1, 2], 400),
     ("text", 400),
     ])
@@ -415,7 +415,7 @@ def test_languages():
 def test_all_languages():
     languages = {code: (name, has) for code, name, has in serve.all_languages()}
     assert languages["de_DE"] == ("German", True)
-    ## Ones PortMaster has a name for but no translation yet: offered as new.
+    ## Ones Volkyport has a name for but no translation yet: offered as new.
     assert languages["da_DK"] == ("Danish", False) and languages["fi_FI"] == ("Finnish", False)
 
 
@@ -429,9 +429,9 @@ def test_valid_resolution(text, valid):
 
 def test_default_cache(monkeypatch, tmp_path):
     monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path))
-    assert serve.default_cache() == tmp_path / "portmaster-theme-server"
+    assert serve.default_cache() == tmp_path / "volkyport-theme-server"
     monkeypatch.delenv("XDG_CACHE_HOME")
-    assert serve.default_cache().name == "portmaster-theme-server"
+    assert serve.default_cache().name == "volkyport-theme-server"
 
 
 ################################################################################
@@ -679,7 +679,7 @@ def slow_pool(tmp_path, themes_dir, monkeypatch):
 
 
 def test_stop_waits_for_a_start(slow_pool):
-    ## warm() is still starting the first renderer when PortMaster stops the server: stop()
+    ## warm() is still starting the first renderer when Volkyport stops the server: stop()
     ## waits for it and stops what it started, or it would carry on in the removed folder.
     warm = threading.Thread(target=slow_pool.warm)
     warm.start()
@@ -701,7 +701,7 @@ def test_nothing_starts_after_stop(slow_pool):
 
 
 def test_stop_gives_up_waiting(slow_pool, monkeypatch):
-    ## A start that never ends: stop() still returns (PortMaster kills the server at 15 s).
+    ## A start that never ends: stop() still returns (Volkyport kills the server at 15 s).
     monkeypatch.setattr(SlowZygote, "delay", 1.5)
     warm = threading.Thread(target=slow_pool.warm, daemon=True)
     warm.start()

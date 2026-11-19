@@ -41,13 +41,13 @@ jobs:
       - name: Lint (errors only)
         run: |
           flake8 --select=E9,F63,F7,F82,F811 \
-            PortMaster/pugwash PortMaster/harbourmaster \
-            PortMaster/pylibs/harbourmaster PortMaster/pylibs/pugwash PortMaster/pylibs/theme_server \
+            Volkyport/pugwash Volkyport/harbourmaster \
+            Volkyport/pylibs/harbourmaster Volkyport/pylibs/pugwash Volkyport/pylibs/theme_server \
             tests tools/test_suite tools/theme_server tools/i18n.py
           # The launchers (shellcheck is preinstalled on the runners)
-          cd PortMaster && shellcheck -s bash --severity=error \
-            utils/pm_launch.txt PortMaster.sh */PortMaster.txt */launch_hooks.txt ../tools/installer.sh \
-            "../tools/test_suite/PortMaster Test Suite.sh"
+          cd Volkyport && shellcheck -s bash --severity=error \
+            utils/vp_launch.txt Volkyport.sh */Volkyport.txt */launch_hooks.txt ../tools/installer.sh \
+            "../tools/test_suite/Volkyport Test Suite.sh"
 
       - name: Run tests
         # Coverage must not drop below the floor (3.7 measures ~1% lower than 3.12), raise it as coverage improves.

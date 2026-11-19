@@ -16,7 +16,7 @@ import pytest
 
 
 REPO_DIR = Path(__file__).resolve().parent.parent
-PM_DIR = REPO_DIR / "PortMaster"
+PM_DIR = REPO_DIR / "Volkyport"
 PYLIB_PATH = PM_DIR / "pylibs"
 EXLIB_PATH = PM_DIR / "exlibs"
 DATA_DIR = Path(__file__).resolve().parent / "data"
@@ -68,12 +68,12 @@ if "PM_TEST_VIDEODRIVER" in os.environ:
         del TEST_ENV["SDL_VIDEODRIVER"]
         os.environ.pop("SDL_VIDEODRIVER", None)
 
-## tools/PortMaster as installed: outside a git checkout (a device) some scenes write .pugwash-reboot there.
-for _dir in ("tools/PortMaster", "ports"):
+## tools/Volkyport as installed: outside a git checkout (a device) some scenes write .pugwash-reboot there.
+for _dir in ("tools/Volkyport", "ports"):
     (SESSION_DIR / _dir).mkdir(parents=True)
 
-## Run on a device (eg: by the PortMaster Test Suite port), the environment already
-## describes that device and PortMaster (control.txt, device_info.txt, funcs.txt):
+## Run on a device (eg: by the Volkyport Test Suite port), the environment already
+## describes that device and Volkyport (control.txt, device_info.txt, funcs.txt):
 ## only what TEST_ENV says may count.
 _DEVICE_PREFIXES = ("DEVICE_", "CFW_", "DISPLAY_", "ANALOG_", "HM_")
 _DEVICE_KEYS = ("controlfolder", "directory", "PORTMASTER_HOME", "PM_FUNCS_VERSION", "PM_SCRIPTNAME", "PM_PORTNAME", "PM_VERSION")
@@ -191,7 +191,7 @@ class RecordingCallback(harbourmaster.Callback):
 
 
 ################################################################################
-## Driving pugwash's fifo_control mode, the same way PortMasterDialog.txt does.
+## Driving pugwash's fifo_control mode, the same way VolkyportDialog.txt does.
 FIFO_TIMEOUT = 30
 
 
@@ -322,10 +322,10 @@ def pugwash():
 @pytest.fixture(scope="session")
 def gui(pugwash):
     """
-    One headless PortMasterGUI for the whole test run. SDL keeps some state at class
+    One headless VolkyportGUI for the whole test run. SDL keeps some state at class
     level (eg: the default renderer), so the GUI can't be quit and made again.
     """
-    gui = pugwash.PortMasterGUI(first_scene=pugwash.BlankScene, force_theme="default_theme")
+    gui = pugwash.VolkyportGUI(first_scene=pugwash.BlankScene, force_theme="default_theme")
     yield gui
     gui.quit()
 
@@ -380,7 +380,7 @@ def hm(make_hm):
 @pytest.fixture
 def online_hm(make_hm, ports_json_data, monkeypatch, tmp_path):
     """
-    A HarbourMaster that thinks it is online, with the PortMaster source loaded
+    A HarbourMaster that thinks it is online, with the Volkyport source loaded
     from tests/data/ports.json and downloads served from local zips.
     """
     monkeypatch.setattr(hm_net, "fetch_json", lambda url: json.loads(json.dumps(ports_json_data)))
@@ -397,7 +397,7 @@ def online_hm(make_hm, ports_json_data, monkeypatch, tmp_path):
     monkeypatch.setattr(hm_net, "download", fake_download)
 
     hm = make_hm(offline=False)
-    hm.sources['pm'].update()
+    hm.sources['vp'].update()
     hm.downloads = downloads
     return hm
 

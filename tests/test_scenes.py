@@ -84,7 +84,7 @@ def test_muos_options(option_ids):
 
     assert 'muos-port-mode-toggle' in options
     assert 'trimui-port-mode-toggle' not in options
-    assert 'restore-portmaster' not in options
+    assert 'restore-volkyport' not in options
 
 
 def test_trimui_options(option_ids):
@@ -92,7 +92,7 @@ def test_trimui_options(option_ids):
 
     assert 'trimui-port-mode-toggle' in options
     assert 'muos-port-mode-toggle' not in options
-    assert 'restore-portmaster' not in options
+    assert 'restore-volkyport' not in options
 
 
 def test_other_cfw_options(option_ids):
@@ -100,7 +100,7 @@ def test_other_cfw_options(option_ids):
 
     assert 'muos-port-mode-toggle' not in options
     assert 'trimui-port-mode-toggle' not in options
-    assert 'restore-portmaster' in options
+    assert 'restore-volkyport' in options
 
 
 ################################################################################

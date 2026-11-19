@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# Install.PortMaster.sh: run by the makeself archive (tools/makeself-header.sh), next
-# to PortMaster.zip (and runtimes.zip for the "Full" installers).
+# Install.Volkyport.sh: run by the makeself archive (tools/makeself-header.sh), next
+# to Volkyport.zip (and runtimes.zip for the "Full" installers).
 #
-# This is a FACTORY RESET: everything in PortMaster/ is removed except the runtimes
-# (libs/*.squashfs), then PortMaster.zip is unpacked fresh. The Restore.PortMaster.zip
+# This is a FACTORY RESET: everything in Volkyport/ is removed except the runtimes
+# (libs/*.squashfs), then Volkyport.zip is unpacked fresh. The Restore.Volkyport.zip
 # port relies on that, keep it.
 #
 # Where things go is worked out the same way as harbourmaster's config.detect_paths(),
@@ -28,10 +28,10 @@ OS_NAME_OVERRIDE=""
 NO_FRONTEND_RESTART=""
 BATOCERA_LIKE=""
 
-## -- Where is PortMaster going? -----------------------------------------------
+## -- Where is Volkyport going? -----------------------------------------------
 retrodeck_paths() {
   if [ -z "$ports_folder" ]; then
-    ports_folder="$rdhome/PortMaster"
+    ports_folder="$rdhome/Volkyport"
   fi
 
   if [ -z "$roms_folder" ]; then
@@ -102,18 +102,18 @@ elif [ -f "$R$HOME/.var/app/net.retrodeck.retrodeck/config/retrodeck/retrodeck.c
   export controlfolder="$HOME/.var/app/net.retrodeck.retrodeck/data"
   retrodeck_paths
 
-## spruce, TrimUI (and RetroDECK) bundle PortMaster and don't use this installer, they
-## are only found so a stray run puts PortMaster where they keep it.
+## spruce, TrimUI (and RetroDECK) bundle Volkyport and don't use this installer, they
+## are only found so a stray run puts Volkyport where they keep it.
 elif [ -d "$R/mnt/SDCARD/spruce" ]; then
   ## spruce
-  controlfolder="/mnt/SDCARD/Persistent/portmaster"
+  controlfolder="/mnt/SDCARD/Persistent/volkyport"
   directory="/mnt/SDCARD/Roms"
   OS_NAME_OVERRIDE="spruce"
   NO_FRONTEND_RESTART="Y"
 
-elif [ -d "$R/mnt/SDCARD/Apps/PortMaster" ]; then
+elif [ -d "$R/mnt/SDCARD/Apps/Volkyport" ]; then
   ## TrimUI
-  controlfolder="/mnt/SDCARD/Apps/PortMaster"
+  controlfolder="/mnt/SDCARD/Apps/Volkyport"
   directory="/mnt/SDCARD/Data"
   OS_NAME_OVERRIDE="trimui"
   NO_FRONTEND_RESTART="Y"
@@ -137,7 +137,7 @@ elif [ -d "$R/opt/system/Tools" ]; then
   controlfolder="/opt/system/Tools"
 
 elif [ -d "$R/opt/tools" ]; then
-  ## (harbourmaster checks for /opt/tools/PortMaster, which this is about to create)
+  ## (harbourmaster checks for /opt/tools/Volkyport, which this is about to create)
   controlfolder="/opt/tools"
 
 else
@@ -187,12 +187,12 @@ if [ "$PM_INSTALL_DETECT" = "Y" ]; then
   exit 0
 fi
 
-## muOS includes PortMaster, with its own way to restore it (or muos.portmaster.zip).
+## muOS includes Volkyport, with its own way to restore it (or muos.volkyport.zip).
 ## Don't touch anything there: on muOS releases that read the SD card through
 ## exfat-fuse (2410 Banana, 2601 Jacaranda), deleting this script while it runs
 ## crashes the card's driver and every bit of content disappears until a reboot.
 if [ "$OS_NAME" = "muOS" ]; then
-  echo "muOS includes PortMaster, restore it from muOS or install muos.portmaster.zip. Nothing was changed."
+  echo "muOS includes Volkyport, restore it from muOS or install muos.volkyport.zip. Nothing was changed."
   exit 1
 fi
 
@@ -204,7 +204,7 @@ if [ "$NO_SUDO" = "N" ]; then
   fi
 fi
 
-## The launcher moves out of PortMaster/ to where the frontend runs it, except here:
+## The launcher moves out of Volkyport/ to where the frontend runs it, except here:
 RELOCATE_PM=""
 case "${OS_NAME}" in
   JELOS|UnofficialOS|ROCKNIX|retrodeck|spruce|trimui) ;;
@@ -217,8 +217,8 @@ printf "\033c" > $CUR_TTY
 ## Everything below needs a working unzip, check it before anything is deleted. (spruce
 ## put an unzip needing glibc 2.34 first on PATH, and the TrimUI Brick's BusyBox has
 ## none: the reset went ahead, nothing was unpacked, and it still said "Finished".)
-if ! UNZIP_ERROR="$($ESUDO unzip -l "$TEMP_DIR/PortMaster.zip" 2>&1 > /dev/null)"; then
-  echo "Unable to read PortMaster.zip with unzip ($(command -v unzip || echo "no unzip found")), nothing was installed:" | tee -a $CUR_TTY
+if ! UNZIP_ERROR="$($ESUDO unzip -l "$TEMP_DIR/Volkyport.zip" 2>&1 > /dev/null)"; then
+  echo "Unable to read Volkyport.zip with unzip ($(command -v unzip || echo "no unzip found")), nothing was installed:" | tee -a $CUR_TTY
   echo "$UNZIP_ERROR" | tee -a $CUR_TTY
   exit 1
 fi
@@ -230,27 +230,27 @@ if ! cd "$R$controlfolder"; then
   exit 1
 fi
 
-echo "Installing PortMaster to $controlfolder" | tee -a $CUR_TTY
+echo "Installing Volkyport to $controlfolder" | tee -a $CUR_TTY
 
 ## -- Factory reset: everything goes except the runtimes. ------------------------
 $ESUDO mkdir -p temp_runtimes
-$ESUDO mv PortMaster/libs/*.squashfs temp_runtimes/ 2>/dev/null
+$ESUDO mv Volkyport/libs/*.squashfs temp_runtimes/ 2>/dev/null
 
-$ESUDO rm -fRv "PortMaster" "PortMaster.sh" | tee -a $CUR_TTY
+$ESUDO rm -fRv "Volkyport" "Volkyport.sh" | tee -a $CUR_TTY
 
 if [[ "${OS_NAME}" == "JELOS" ]] || [[ "${OS_NAME}" == "ROCKNIX" ]]; then
-  ## Taken from this: https://github.com/brooksytech/JELOS/blob/main/packages/apps/portmaster/scripts/start_portmaster.sh
-  # Make sure PortMaster exists in .config/PortMaster
-  if [ ! -d "$R/storage/.config/PortMaster" ]; then
-      mkdir -p "$R/storage/.config/ports/PortMaster"
-      cp -rv "$R/usr/config/PortMaster" "$R/storage/.config/"
+  ## Taken from this: https://github.com/brooksytech/JELOS/blob/main/packages/apps/volkyport/scripts/start_volkyport.sh
+  # Make sure Volkyport exists in .config/Volkyport
+  if [ ! -d "$R/storage/.config/Volkyport" ]; then
+      mkdir -p "$R/storage/.config/ports/Volkyport"
+      cp -rv "$R/usr/config/Volkyport" "$R/storage/.config/"
   fi
 
-  cd "$R/storage/.config/PortMaster" || exit 1
+  cd "$R/storage/.config/Volkyport" || exit 1
 
-  # Grab the latest PortMaster.sh script and control.txt (newer ROCKNIX has no PortMaster.sh here)
-  for config_file in PortMaster.sh control.txt; do
-    [ -f "$R/usr/config/PortMaster/$config_file" ] && cp -v "$R/usr/config/PortMaster/$config_file" "$config_file" | tee -a $CUR_TTY
+  # Grab the latest Volkyport.sh script and control.txt (newer ROCKNIX has no Volkyport.sh here)
+  for config_file in Volkyport.sh control.txt; do
+    [ -f "$R/usr/config/Volkyport/$config_file" ] && cp -v "$R/usr/config/Volkyport/$config_file" "$config_file" | tee -a $CUR_TTY
   done
 
   # Use our gamecontrollerdb.txt
@@ -260,73 +260,73 @@ if [[ "${OS_NAME}" == "JELOS" ]] || [[ "${OS_NAME}" == "ROCKNIX" ]]; then
   # Use our gptokeyb
   rm -f gptokeyb
   ln -svf /usr/bin/gptokeyb gptokeyb | tee -a $CUR_TTY
-  [ -f "$R/usr/config/PortMaster/portmaster.gptk" ] && cp -v "$R/usr/config/PortMaster/portmaster.gptk" portmaster.gptk | tee -a $CUR_TTY
+  [ -f "$R/usr/config/Volkyport/volkyport.gptk" ] && cp -v "$R/usr/config/Volkyport/volkyport.gptk" volkyport.gptk | tee -a $CUR_TTY
 
   cd "$R$controlfolder" || exit 1
 fi
 
-$ESUDO unzip -o "$TEMP_DIR/PortMaster.zip" | tee -a $CUR_TTY
+$ESUDO unzip -o "$TEMP_DIR/Volkyport.zip" | tee -a $CUR_TTY
 
-if [ ! -f "$R$controlfolder/PortMaster/pugwash" ]; then
+if [ ! -f "$R$controlfolder/Volkyport/pugwash" ]; then
   ## Don't leave the runtimes stranded in temp_runtimes/, nor carry on as if it worked.
-  $ESUDO mkdir -p "$R$controlfolder/PortMaster/libs"
-  $ESUDO mv "$R$controlfolder"/temp_runtimes/*.squashfs "$R$controlfolder/PortMaster/libs/" 2>/dev/null
+  $ESUDO mkdir -p "$R$controlfolder/Volkyport/libs"
+  $ESUDO mv "$R$controlfolder"/temp_runtimes/*.squashfs "$R$controlfolder/Volkyport/libs/" 2>/dev/null
   $ESUDO rm -fR "$R$controlfolder/temp_runtimes/"
-  echo "Unpacking PortMaster.zip failed, PortMaster is NOT installed. Run the installer again, or install PortMaster another way." | tee -a $CUR_TTY
+  echo "Unpacking Volkyport.zip failed, Volkyport is NOT installed. Run the installer again, or install Volkyport another way." | tee -a $CUR_TTY
   exit 1
 fi
 
 ## -- This CFW's own launcher and control.txt ------------------------------------
-PORTMASTER_DIR="$R$controlfolder/PortMaster"
+VOLKYPORT_DIR="$R$controlfolder/Volkyport"
 
 if [ ! -z "$OS_NAME" ]; then
-  OVERRIDE_DIR="$PORTMASTER_DIR/${OS_NAME,,}"
+  OVERRIDE_DIR="$VOLKYPORT_DIR/${OS_NAME,,}"
 
   echo "--> $OVERRIDE_DIR <--" | tee -a $CUR_TTY
   if [ -d "$OVERRIDE_DIR" ]; then
-    [ -f "$OVERRIDE_DIR/PortMaster.txt" ] && $ESUDO cp -vf "$OVERRIDE_DIR/PortMaster.txt" "$PORTMASTER_DIR/PortMaster.sh" | tee -a $CUR_TTY
-    [ -f "$OVERRIDE_DIR/control.txt"    ] && $ESUDO cp -vf "$OVERRIDE_DIR/control.txt" "$PORTMASTER_DIR/" | tee -a $CUR_TTY
+    [ -f "$OVERRIDE_DIR/Volkyport.txt" ] && $ESUDO cp -vf "$OVERRIDE_DIR/Volkyport.txt" "$VOLKYPORT_DIR/Volkyport.sh" | tee -a $CUR_TTY
+    [ -f "$OVERRIDE_DIR/control.txt"    ] && $ESUDO cp -vf "$OVERRIDE_DIR/control.txt" "$VOLKYPORT_DIR/" | tee -a $CUR_TTY
   fi
 fi
 
 if [ ! -z "$RELOCATE_PM" ]; then
   if [ "$BATOCERA_LIKE" = "Y" ]; then
-    $ESUDO mv -vf PortMaster/PortMaster.sh "$R/$directory/ports/PortMaster.sh" | tee -a $CUR_TTY
+    $ESUDO mv -vf Volkyport/Volkyport.sh "$R/$directory/ports/Volkyport.sh" | tee -a $CUR_TTY
   else
-    $ESUDO mv -vf PortMaster/PortMaster.sh PortMaster.sh | tee -a $CUR_TTY
+    $ESUDO mv -vf Volkyport/Volkyport.sh Volkyport.sh | tee -a $CUR_TTY
   fi
 fi
 
 if [ "$OS_NAME" = "retrodeck" ]; then
-  $ESUDO mkdir -p "$R/${roms_folder}/portmaster"
-  $ESUDO mv -vf PortMaster/PortMaster.sh "$R/${roms_folder}/portmaster/PortMaster.sh" | tee -a $CUR_TTY
+  $ESUDO mkdir -p "$R/${roms_folder}/volkyport"
+  $ESUDO mv -vf Volkyport/Volkyport.sh "$R/${roms_folder}/volkyport/Volkyport.sh" | tee -a $CUR_TTY
 fi
 
 ## -- Runtimes: the ones that were here, then the Full installer's. --------------
-$ESUDO mv temp_runtimes/*.squashfs PortMaster/libs/ 2>/dev/null
+$ESUDO mv temp_runtimes/*.squashfs Volkyport/libs/ 2>/dev/null
 $ESUDO rm -fR temp_runtimes/
 
 if [ -f "$TEMP_DIR/runtimes.zip" ]; then
-  cd PortMaster/libs/
+  cd Volkyport/libs/
   $ESUDO unzip -o "$TEMP_DIR/runtimes.zip" | tee -a $CUR_TTY
   cd "$R$controlfolder" || exit 1
 fi
 
 ## -- The installer / restore ports have done their job. -------------------------
 if [ "$OS_NAME" = "retrodeck" ]; then
-  $ESUDO rm -vf "$R/$roms_folder/portmaster/"Install*PortMaster*.sh | tee -a $CUR_TTY
-  $ESUDO rm -vf "$R/$roms_folder/portmaster/"Restore*PortMaster*.sh | tee -a $CUR_TTY
+  $ESUDO rm -vf "$R/$roms_folder/volkyport/"Install*Volkyport*.sh | tee -a $CUR_TTY
+  $ESUDO rm -vf "$R/$roms_folder/volkyport/"Restore*Volkyport*.sh | tee -a $CUR_TTY
 else
-  $ESUDO rm -vf "$R/$directory/port_scripts/"Install*PortMaster*.sh | tee -a $CUR_TTY
-  $ESUDO rm -vf "$R/$directory/port_scripts/"Restore*PortMaster*.sh | tee -a $CUR_TTY
-  $ESUDO rm -vf "$R/$directory/ports/"Install*PortMaster*.sh | tee -a $CUR_TTY
-  $ESUDO rm -vf "$R/$directory/ports/"Restore*PortMaster*.sh | tee -a $CUR_TTY
+  $ESUDO rm -vf "$R/$directory/port_scripts/"Install*Volkyport*.sh | tee -a $CUR_TTY
+  $ESUDO rm -vf "$R/$directory/port_scripts/"Restore*Volkyport*.sh | tee -a $CUR_TTY
+  $ESUDO rm -vf "$R/$directory/ports/"Install*Volkyport*.sh | tee -a $CUR_TTY
+  $ESUDO rm -vf "$R/$directory/ports/"Restore*Volkyport*.sh | tee -a $CUR_TTY
 fi
 
-echo "Finished installing PortMaster" | tee -a $CUR_TTY
+echo "Finished installing Volkyport" | tee -a $CUR_TTY
 sleep "${PM_INSTALL_SLEEP:-2}"
 
-## -- Let the frontend see the new PortMaster. -----------------------------------
+## -- Let the frontend see the new Volkyport. -----------------------------------
 if [ -f "$R$HOME/no_es_restart" ]; then
   $ESUDO rm -f "$R$HOME/no_es_restart"
 
@@ -354,10 +354,10 @@ elif [[ "$ES_NAME" == "batocera-es-swissknife" ]]; then
 
       if ! grep -q 'from generators.Generator import Generator' "$SH_GENERATOR"; then
         # New style relative imports
-        cp -f "$PORTMASTER_DIR/batocera/shGenerator.py" "$SH_GENERATOR"
+        cp -f "$VOLKYPORT_DIR/batocera/shGenerator.py" "$SH_GENERATOR"
       else
         # Old style absolute imports
-        cp -f "$PORTMASTER_DIR/knulli/shGenerator.py" "$SH_GENERATOR"
+        cp -f "$VOLKYPORT_DIR/knulli/shGenerator.py" "$SH_GENERATOR"
       fi
     fi
 

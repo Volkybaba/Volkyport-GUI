@@ -2,9 +2,9 @@ cat << EOF  > "$archname"
 #!/bin/bash
 # This script was generated using Makeself $MS_VERSION
 # The license covering this archive and its contents, if any, is wholly independent of the Makeself license (GPL)
-# PORTMASTER: restore.portmaster.zip, Restore PortMaster.sh
+# VOLKYPORT: restore.volkyport.zip, Restore Volkyport.sh
 
-exec > >(tee -a "\$HOME/portmaster.log") 2>&1
+exec > >(tee -a "\$HOME/volkyport.log") 2>&1
 
 ORIG_UMASK=\`umask\`
 if test "$KEEP_UMASK" = n; then
@@ -308,7 +308,7 @@ MS_Handheld_Display()
     # The global variable ZPID must be declared outside this function.
     if type zenity >/dev/null 2>&1; then
         zenity --progress --pulsate \
-            --title="PortMaster Installer" \
+            --title="Volkyport Installer" \
             --text="\$message" \
             --info-text="Please be patient, this may take several minutes..." \
             --no-cancel --auto-close --width=400 &

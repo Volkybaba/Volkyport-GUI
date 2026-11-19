@@ -90,10 +90,10 @@ def server(ports_json_data, monkeypatch):
 
 @pytest.fixture
 def update_source(make_hm):
-    """Update the PortMaster source like a fresh start of PortMaster would."""
+    """Update the Volkyport source like a fresh start of Volkyport would."""
     def _update():
         hm = make_hm()
-        source = hm.sources['pm']
+        source = hm.sources['vp']
         source.update()
         return source
 

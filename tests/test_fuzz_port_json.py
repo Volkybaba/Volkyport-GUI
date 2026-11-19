@@ -2,11 +2,11 @@
 #
 # A fuzzer for the files that describe ports. Each case mutates real port info (wrong types,
 # missing keys, unsafe names, deep nesting, mangled bytes) and pushes it through the ways it
-# reaches PortMaster:
+# reaches Volkyport:
 #   1. port.json files of installed ports, loaded at startup
 #   2. ports.json entries from a source
 #   3. port.json inside a port zip being installed
-#   4. ports_info.json, port_stats.json and the scripts' PORTMASTER: signatures
+#   4. ports_info.json, port_stats.json and the scripts' VOLKYPORT: signatures
 #   5. the GUI's ports list and port info screens
 # then lists, sorts, filters, prints (the CLI) and uninstalls what loaded. Nothing may raise,
 # and every delete, write, rename and mkdir must stay inside the test's tmp dir.
@@ -26,7 +26,7 @@ import pytest
 
 from harbourmaster.config import HM_SORT_ORDER
 from harbourmaster.util import net as hm_net
-## Imported here, not in a fuzz case: on import it opens its log in HM_TOOLS_DIR/PortMaster
+## Imported here, not in a fuzz case: on import it opens its log in HM_TOOLS_DIR/Volkyport
 ## (made, like an install has it, since the device test fixes), which the sandbox would count.
 from harbourmaster import cli
 
@@ -36,7 +36,7 @@ from conftest import DATA_DIR, basic_port_files, write_port_zip
 def _json_keeps_non_finite():
     ## Some CFWs' Python can't recognise NaN (AmberELEC's: math.isnan(nan) is False), so json.dumps
     ## writes it as a bare `nan` that json.loads refuses. The fuzzer's own round trips would fail
-    ## there, so it only makes NaN/infinity where they survive (PortMaster itself reads them fine).
+    ## there, so it only makes NaN/infinity where they survive (Volkyport itself reads them fine).
     try:
         return json.loads(json.dumps([float('nan'), float('inf')]))[1] == float('inf')
     except ValueError:
@@ -340,7 +340,7 @@ def base_infos():
     for info in data['ports'].values():
         info = dict(info)
         source = info.pop('source', None)
-        info['status'] = {'source': "PortMaster", 'md5': (source or {}).get('md5'), 'status': "Installed"}
+        info['status'] = {'source': "Volkyport", 'md5': (source or {}).get('md5'), 'status': "Installed"}
         infos.append(info)
 
     files = basic_port_files()
@@ -446,7 +446,7 @@ def test_fuzz_source(tmp_path, make_hm, monkeypatch, guard):
 
         try:
             hm = make_hm(offline=False)
-            hm.sources['pm'].update()
+            hm.sources['vp'].update()
         except (AssertionError, SandboxEscape):
             raise
         except Exception as err:
@@ -585,7 +585,7 @@ def test_fuzz_ports_dir(tmp_path, make_hm, hm_dirs, guard):
             header = "#!/bin/bash\n"
             if rng.random() < 0.5:
                 sig = [rng.choice(weird_strings(outside) + ["testport.zip", "abes.zip", "sprout.zip"]) for _ in range(rng.randint(0, 3))]
-                header += "# PORTMASTER: " + ", ".join(sig).replace("\n", " ") + "\n"
+                header += "# VOLKYPORT: " + ", ".join(sig).replace("\n", " ") + "\n"
             layout[script] = header + "echo\n"
 
             if folder:
@@ -602,7 +602,7 @@ def test_fuzz_ports_dir(tmp_path, make_hm, hm_dirs, guard):
 
         if rng.random() < 0.3:
             ## A script renamed by the user, signed with its old name.
-            layout["Renamed.sh"] = "#!/bin/bash\n# PORTMASTER: testport.zip, Test Port.sh\necho\n"
+            layout["Renamed.sh"] = "#!/bin/bash\n# VOLKYPORT: testport.zip, Test Port.sh\necho\n"
 
         for name, data in layout.items():
             path = ports_dir / name
@@ -693,7 +693,7 @@ def test_fuzz_gui(gui, tmp_path, make_hm, hm_dirs, monkeypatch):
             case = json.dumps(fuzzed, default=str)[:300]
             try:
                 hm = make_hm(offline=False)
-                hm.sources['pm'].update()
+                hm.sources['vp'].update()
             except Exception as err:
                 record("gui:hm", err, case)
                 continue

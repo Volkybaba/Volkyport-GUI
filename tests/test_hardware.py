@@ -165,7 +165,7 @@ def _old_launcher_env(monkeypatch):
 
 @pytest.mark.parametrize("version", ["0.1.15", "0.9.0"])
 def test_device_info_ignores_another_scripts_environment(tmp_path, monkeypatch, version):
-    ## PortMaster updated itself and restarted under the old launcher: every port was
+    ## Volkyport updated itself and restarted under the old launcher: every port was
     ## "incompatible", the capabilities were only the language. A newer one's isn't used either.
     _old_launcher_env(monkeypatch)
     monkeypatch.setenv("DEVICE_INFO_VERSION", version)

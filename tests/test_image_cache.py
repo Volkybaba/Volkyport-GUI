@@ -42,8 +42,8 @@ def flood(images, tmp_path, count=None):
 def test_which_images_are_data():
     from pugwash.sdl.images import ImageManager
 
-    assert ImageManager.is_data_image("/roms/ports/PortMaster/images/shot.png")
-    assert ImageManager.is_data_image("qr:https://portmaster.games")
+    assert ImageManager.is_data_image("/roms/ports/Volkyport/images/shot.png")
+    assert ImageManager.is_data_image("qr:https://volkyport.games")
     assert not ImageManager.is_data_image("pill_cap.png")
     assert not ImageManager.is_data_image("frames/spin_003.png")
 
@@ -102,7 +102,7 @@ def test_a_held_data_image_loads_itself_again(gui, images, tmp_path):
 
 def test_held_qr_code_loads_itself_again(gui, images, tmp_path):
     images, _ = images
-    qr = images.load("qr:https://portmaster.games")
+    qr = images.load("qr:https://volkyport.games")
     assert qr in [images.images.get(name) for name in images.cache]
 
     flood(images, tmp_path)

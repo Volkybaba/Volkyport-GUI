@@ -180,7 +180,7 @@ def test_fetch_new_files(info_hm, info_repo):
     cfg_dir = info_hm.cfg_dir
     assert json.loads((cfg_dir / "porters.json").read_text()) == {"klops": {}}
     assert "a.sh" in json.loads((cfg_dir / "ports_info.json").read_text())['items']
-    ## Only the files PortMaster uses.
+    ## Only the files Volkyport uses.
     assert not (cfg_dir / "README.md").exists()
     assert info_hm.cfg_data['last-info-check']
 
@@ -356,7 +356,7 @@ def test_git_blob_sha_file(tmp_path):
 
 
 def test_ports_info_with_bad_values_is_cleaned(hm):
-    ## A bad copy of ports_info.json stopped PortMaster starting.
+    ## A bad copy of ports_info.json stopped Volkyport starting.
     (hm.cfg_dir / "ports_info.json").write_text(json.dumps({
         "items": {"Good.sh": "good.zip", "Shared.sh": ["a.zip", 1, "b.zip"], "Bad.sh": 5, "Nameless.sh": "\u202e", "Empty.sh": []},
         "md5": {"abc": "Good.sh", "def": 1},

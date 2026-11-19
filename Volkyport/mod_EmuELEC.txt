@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+# SPDX-License-Identifier: MIT
+#
+## Modular - EmuELEC
+#
+# A modular file that is sourced for specific script lines required by ports running on EmuELEC.
+#
+# usage `[ -f "${controlfolder}/mod_${CFW_NAME}.txt" ] && source "${controlfolder}/mod_${CFW_NAME}.txt"`
+
+# Use for Godot 2
+GODOT2_OPTS="-r ${DISPLAY_WIDTH}x${DISPLAY_HEIGHT} -f"
+
+# Use for Godot 3+
+GODOT_OPTS="--resolution ${DISPLAY_WIDTH}x${DISPLAY_HEIGHT} -f"
+
+# get_controls reads the full gamecontrollerdb.txt into sdl_controllerconfig when
+# no device GUID is known. Ports export it as SDL_GAMECONTROLLERCONFIG, which
+# exceeds MAX_ARG_STRLEN (131072 bytes) and makes every execve() fail with E2BIG.
+# SDL still gets the mappings via SDL_GAMECONTROLLERCONFIG_FILE.
+# Only once: some ports source this file twice, and wrapping the wrapper would make
+# get_controls call itself until bash crashes.
+if declare -f get_controls >/dev/null 2>&1 && ! declare -f _pm_get_controls_orig >/dev/null 2>&1; then
+    eval "_pm_get_controls_orig() $(declare -f get_controls | tail -n +2)"
+
+    get_controls() {
+        _pm_get_controls_orig "$@"
+        [ "${#sdl_controllerconfig}" -gt 100000 ] && sdl_controllerconfig=""
+
+        # Override SDL_GAMECONTROLLERCONFIG_FILE because Volkyport sets it to
+        # /tmp/gamecontrollerdb.txt, a copy of ${HOME}/ports/Volkyport/gamecontrollerdb.txt
+        # that lacks the user-defined button mappings. Only when EmuELEC has the file: a
+        # missing one would leave SDL no mappings at all (sdl_controllerconfig is emptied above).
+        if [ -s "${HOME}/.config/SDL-GameControllerDB/gamecontrollerdb.txt" ]; then
+            export SDL_GAMECONTROLLERCONFIG_FILE="${HOME}/.config/SDL-GameControllerDB/gamecontrollerdb.txt"
+        fi
+    }
+fi
+
+# Older ports call get_controls before sourcing this file.
+[ "${#sdl_controllerconfig}" -gt 100000 ] && sdl_controllerconfig=""
+
+pm_platform_helper() {
+    pm_message_close
+
+    if [ -e "$PM_PIPE" ]; then
+        VolkyportDialogExit
+    fi
+    # DO SOMETHING HERE
+    printf ""
+}

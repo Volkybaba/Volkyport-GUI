@@ -83,7 +83,7 @@ def test_installed_port_found(installed):
 
 
 def test_port_json_without_runtime(hm, ports_dir):
-    ## A hand-written version 3 port.json with no runtime stopped PortMaster starting.
+    ## A hand-written version 3 port.json with no runtime stopped Volkyport starting.
     files = basic_port_files()
     files["testport/port.json"] = {"version": 3, "name": "testport.zip", "items": ["Test Port.sh", "testport/"], "attr": {"title": "Test Port"}}
     install_files(ports_dir, files)
@@ -284,14 +284,14 @@ def test_script_gets_a_signature(hm, ports_dir):
 
 
 def test_no_touchy_scripts_are_ignored(hm, ports_dir):
-    install_files(ports_dir, {"Mine.sh": "#!/bin/bash\n# PORTMASTER NO TOUCHY\n"})
+    install_files(ports_dir, {"Mine.sh": "#!/bin/bash\n# VOLKYPORT NO TOUCHY\n"})
     hm.load_ports()
 
     assert hm.unknown_ports == []
     assert util.load_pm_signature(ports_dir / "Mine.sh") is None
 
 
-@pytest.mark.parametrize("name", ["PortMaster.sh", "gamelist.xml", "images", "videos", "manuals", "ThemeMaster.sh", "harbourmaster"])
+@pytest.mark.parametrize("name", ["Volkyport.sh", "gamelist.xml", "images", "videos", "manuals", "ThemeMaster.sh", "harbourmaster"])
 def test_frontend_files_are_ignored(hm, ports_dir, name):
     if "." in name:
         install_files(ports_dir, {name: "#!/bin/bash\n"})
@@ -392,7 +392,7 @@ def test_shared_script_belongs_to_nobody_new(hm, ports_dir):
 
 
 ################################################################################
-## load_ports: ports without a port.json (installed by old PortMasters)
+## load_ports: ports without a port.json (installed by old Volkyports)
 def test_port_json_is_made_for_a_known_script(online_hm, ports_dir):
     set_ports_info(online_hm)
     install_files(ports_dir, {"SPROUT.sh": "#!/bin/bash\n", "sprout/": ""})
@@ -745,7 +745,7 @@ def test_port_download_size_and_url(online_hm, ports_json_data):
 
 
 def test_port_images_from_the_source(online_hm):
-    source = online_hm.sources['pm']
+    source = online_hm.sources['vp']
     (source._images_dir / "sprout.screenshot.png").write_bytes(b"png")
     source._load_images()
 
@@ -797,7 +797,7 @@ def test_installed_port_images_bad_port_json_entry(installed):
     {'source': "x"},
     ], ids=['status-str', 'status-list', 'files-str', 'files-list', 'files-values', 'source-str'])
 def test_port_json_with_bad_root_values(hm, ports_dir, changes):
-    ## Each of these stopped PortMaster starting.
+    ## Each of these stopped Volkyport starting.
     files = basic_port_files()
     files["testport/port.json"].update(changes)
     install_files(ports_dir, files)

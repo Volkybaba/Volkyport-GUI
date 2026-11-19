@@ -5,8 +5,8 @@
 
 ./do_i18n.sh
 
-python3 tools/pm_release.py stable "$@"
+python3 tools/vp_release.py stable "$@"
 
-git add PortMaster/
+git add Volkyport/
 
 git commit

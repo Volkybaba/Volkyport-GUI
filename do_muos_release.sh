@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# muos.portmaster.zip: PortMaster laid out for muOS images.
+# muos.volkyport.zip: Volkyport laid out for muOS images.
 #
-#   ./do_muos_release.sh            from dist/PortMaster.zip (./do_release.sh first)
-#   ./do_muos_release.sh stable  from the latest stable PortMaster.zip on GitHub
+#   ./do_muos_release.sh            from dist/Volkyport.zip (./do_release.sh first)
+#   ./do_muos_release.sh stable  from the latest stable Volkyport.zip on GitHub
 #
-# Writes dist/muos.portmaster.zip.
+# Writes dist/muos.volkyport.zip.
 
 set -euo pipefail
 
@@ -19,33 +19,33 @@ trap 'rm -rf "$BUILD_DIR"' EXIT
 cd "$BUILD_DIR"
 
 if [[ "${1:-}" == "stable" ]]; then
-  curl -fL -o version.json "https://github.com/PortsMaster/PortMaster-GUI/releases/latest/download/version.json"
-  curl -fL -o PortMaster.zip "$(jq -r '.stable.url' version.json)"
-  PORTMASTER_ZIP="$BUILD_DIR/PortMaster.zip"
+  curl -fL -o version.json "https://github.com/Volkybaba/PortMaster-GUI/releases/latest/download/version.json"
+  curl -fL -o Volkyport.zip "$(jq -r '.stable.url' version.json)"
+  VOLKYPORT_ZIP="$BUILD_DIR/Volkyport.zip"
 else
-  PORTMASTER_ZIP="$DIST_DIR/PortMaster.zip"
+  VOLKYPORT_ZIP="$DIST_DIR/Volkyport.zip"
 fi
 
-if [[ ! -f "$PORTMASTER_ZIP" ]]; then
-  echo "Missing $PORTMASTER_ZIP, run ./do_release.sh first."
+if [[ ! -f "$VOLKYPORT_ZIP" ]]; then
+  echo "Missing $VOLKYPORT_ZIP, run ./do_release.sh first."
   exit 255
 fi
 
-mkdir -p mnt/mmc/MUOS/ roms/ports/PortMaster/
+mkdir -p mnt/mmc/MUOS/ roms/ports/Volkyport/
 
 (
   cd mnt/mmc/MUOS/
-  unzip -q "$PORTMASTER_ZIP"
+  unzip -q "$VOLKYPORT_ZIP"
 
-  cd PortMaster
+  cd Volkyport
   cp muos/control.txt control.txt
-  cp muos/control.txt "$BUILD_DIR/roms/ports/PortMaster/control.txt"
-  cp muos/PortMaster.txt PortMaster.sh
+  cp muos/control.txt "$BUILD_DIR/roms/ports/Volkyport/control.txt"
+  cp muos/Volkyport.txt Volkyport.sh
   rm -f tasksetter
   touch tasksetter
 )
 
 mkdir -p "$DIST_DIR"
-rm -f "$DIST_DIR/muos.portmaster.zip"
-zip -9qr "$DIST_DIR/muos.portmaster.zip" roms/ mnt/
-echo "Built $DIST_DIR/muos.portmaster.zip"
+rm -f "$DIST_DIR/muos.volkyport.zip"
+zip -9qr "$DIST_DIR/muos.volkyport.zip" roms/ mnt/
+echo "Built $DIST_DIR/muos.volkyport.zip"

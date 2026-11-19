@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: MIT
 #
-# tools/installer.sh, the script inside Install.PortMaster.sh (and Restore.PortMaster.zip).
+# tools/installer.sh, the script inside Install.Volkyport.sh (and Restore.Volkyport.zip).
 #
 # It runs against a fake filesystem (PM_INSTALL_ROOT), with fake sudo / systemctl /
 # curl / shutdown that write what they were asked to do into calls.txt. It must:
-#  - find the same PortMaster directory as harbourmaster's config.detect_paths(),
-#  - factory reset: remove everything in PortMaster/ except the runtimes,
+#  - find the same Volkyport directory as harbourmaster's config.detect_paths(),
+#  - factory reset: remove everything in Volkyport/ except the runtimes,
 #  - put this CFW's launcher where its frontend runs it,
 #  - tell the frontend.
 
@@ -31,7 +31,7 @@ RD_JSON = (
     '    "paths": {\n'
     '        "rd_home_path": "/run/media/deck/sd/retrodeck",\n'
     '        "roms_path": "/run/media/deck/sd/retrodeck/roms",\n'
-    '        "portmaster_path": "/run/media/deck/sd/retrodeck/PortMaster"\n'
+    '        "portmaster_path": "/run/media/deck/sd/retrodeck/Volkyport"\n'
     '    }\n'
     '}\n')
 
@@ -75,7 +75,7 @@ def fs_spruce(root):
 
 
 def fs_trimui(root):
-    make(root, "/mnt/SDCARD/Apps/PortMaster", "/mnt/SDCARD/Data/ports")
+    make(root, "/mnt/SDCARD/Apps/Volkyport", "/mnt/SDCARD/Data/ports")
 
 
 def fs_batocera(root):
@@ -102,26 +102,26 @@ def fs_arkos_one_card(root):
 
 
 def fs_opt_tools(root):
-    make(root, "/opt/tools/PortMaster", "/roms/ports")
+    make(root, "/opt/tools/Volkyport", "/roms/ports")
 
 
 def fs_rocknix(root):
     make(root, "/storage/roms/ports")
     link(root, "/roms", "/storage/roms")
     write(root, "/etc/os-release", 'NAME="ROCKNIX"\nOS_NAME="ROCKNIX"\n')
-    for name in ("PortMaster.sh", "control.txt", "portmaster.gptk", "mapper.txt"):
-        write(root, f"/usr/config/PortMaster/{name}", f"rocknix {name}\n")
+    for name in ("Volkyport.sh", "control.txt", "volkyport.gptk", "mapper.txt"):
+        write(root, f"/usr/config/Volkyport/{name}", f"rocknix {name}\n")
 
 
 def fs_retrodeck(root):
     ## Inside RetroDECK's flatpak.
     write(root, "/var/config/retrodeck/retrodeck.json", RD_JSON)
-    make(root, "/var/data", "/run/media/deck/sd/retrodeck/roms/portmaster")
+    make(root, "/var/data", "/run/media/deck/sd/retrodeck/roms/volkyport")
 
 
 def fs_retrodeck_outside(root):
     write(root, "/home/deck/.var/app/net.retrodeck.retrodeck/config/retrodeck/retrodeck.json", RD_JSON)
-    make(root, "/home/deck/.var/app/net.retrodeck.retrodeck/data", "/run/media/deck/sd/retrodeck/roms/portmaster")
+    make(root, "/home/deck/.var/app/net.retrodeck.retrodeck/data", "/run/media/deck/sd/retrodeck/roms/volkyport")
 
 
 CFWS = {
@@ -190,29 +190,29 @@ class Installer:
 
 
 @pytest.fixture
-def portmaster_zip():
-    """What PortMaster.zip holds that the installer cares about: the real launchers."""
+def volkyport_zip():
+    """What Volkyport.zip holds that the installer cares about: the real launchers."""
     files = {
-        "PortMaster/pugwash": "#!/usr/bin/env python3\n",
-        "PortMaster/libs/": None,
-        "PortMaster/control.txt": (PM_DIR / "control.txt").read_text(),
-        "PortMaster/PortMaster.sh": (PM_DIR / "PortMaster.sh").read_text(),
+        "Volkyport/pugwash": "#!/usr/bin/env python3\n",
+        "Volkyport/libs/": None,
+        "Volkyport/control.txt": (PM_DIR / "control.txt").read_text(),
+        "Volkyport/Volkyport.sh": (PM_DIR / "Volkyport.sh").read_text(),
         }
 
     for cfw in ("muos", "spruce", "trimui", "retrodeck", "miyoo"):
-        files[f"PortMaster/{cfw}/PortMaster.txt"] = (PM_DIR / cfw / "PortMaster.txt").read_text()
-        files[f"PortMaster/{cfw}/control.txt"] = (PM_DIR / cfw / "control.txt").read_text()
+        files[f"Volkyport/{cfw}/Volkyport.txt"] = (PM_DIR / cfw / "Volkyport.txt").read_text()
+        files[f"Volkyport/{cfw}/control.txt"] = (PM_DIR / cfw / "control.txt").read_text()
 
-    files["PortMaster/trimui/config.json"] = (PM_DIR / "trimui" / "config.json").read_text()
-    files["PortMaster/trimui/icon.png"] = "png"
-    files["PortMaster/batocera/control.txt"] = (PM_DIR / "batocera" / "control.txt").read_text()
-    files["PortMaster/knulli/control.txt"] = (PM_DIR / "knulli" / "control.txt").read_text()
-    files["PortMaster/batocera/shGenerator.py"] = "# batocera shGenerator, gamecontrollerdb.txt\n"
-    files["PortMaster/knulli/shGenerator.py"] = "# knulli shGenerator, gamecontrollerdb.txt\n"
+    files["Volkyport/trimui/config.json"] = (PM_DIR / "trimui" / "config.json").read_text()
+    files["Volkyport/trimui/icon.png"] = "png"
+    files["Volkyport/batocera/control.txt"] = (PM_DIR / "batocera" / "control.txt").read_text()
+    files["Volkyport/knulli/control.txt"] = (PM_DIR / "knulli" / "control.txt").read_text()
+    files["Volkyport/batocera/shGenerator.py"] = "# batocera shGenerator, gamecontrollerdb.txt\n"
+    files["Volkyport/knulli/shGenerator.py"] = "# knulli shGenerator, gamecontrollerdb.txt\n"
     return files
 
 
-def put_zip(installer, files, name="PortMaster.zip"):
+def put_zip(installer, files, name="Volkyport.zip"):
     with zipfile.ZipFile(installer.work / name, 'w') as zf:
         for file_name, data in files.items():
             info = zipfile.ZipInfo(file_name)
@@ -222,7 +222,7 @@ def put_zip(installer, files, name="PortMaster.zip"):
 
 
 def stub(cfw=None):
-    return (PM_DIR / "PortMaster.sh" if cfw is None else PM_DIR / cfw / "PortMaster.txt").read_text()
+    return (PM_DIR / "Volkyport.sh" if cfw is None else PM_DIR / cfw / "Volkyport.txt").read_text()
 
 
 ################################################################################
@@ -260,25 +260,25 @@ def test_detection_changes_nothing(tmp_path, cfw):
 ## Installing.
 @pytest.fixture
 def old_install():
-    """A PortMaster that was already there: config, themes, runtimes, an old launcher."""
+    """A Volkyport that was already there: config, themes, runtimes, an old launcher."""
     def _old_install(installer, controlfolder):
-        pm = installer.path(controlfolder) / "PortMaster"
+        pm = installer.path(controlfolder) / "Volkyport"
         write(pm, "config/config.json", "{}")
         write(pm, "themes/some.theme/theme.json", "{}")
         write(pm, "libs/godot.squashfs", "runtime")
-        write(pm, "PortMaster.sh", "old launcher")
+        write(pm, "Volkyport.sh", "old launcher")
         return pm
 
     return _old_install
 
 
-def test_arkos_factory_reset(tmp_path, portmaster_zip, old_install):
+def test_arkos_factory_reset(tmp_path, volkyport_zip, old_install):
     installer = Installer(tmp_path, "arkos")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
     pm = old_install(installer, "/opt/system/Tools")
-    write(installer.root, "/opt/system/Tools/PortMaster.sh", "old launcher")
-    write(installer.root, "/roms2/ports/Install.PortMaster.sh", "installer")
-    write(installer.root, "/roms2/ports/Restore PortMaster.sh", "restore")
+    write(installer.root, "/opt/system/Tools/Volkyport.sh", "old launcher")
+    write(installer.root, "/roms2/ports/Install.Volkyport.sh", "installer")
+    write(installer.root, "/roms2/ports/Restore Volkyport.sh", "restore")
     write(installer.root, "/roms2/ports/Some Game.sh", "a port")
 
     installer.run()
@@ -290,8 +290,8 @@ def test_arkos_factory_reset(tmp_path, portmaster_zip, old_install):
     assert (pm / "pugwash").is_file()
 
     ## The launcher moves up to Tools/, where ES lists it.
-    assert installer.path("/opt/system/Tools/PortMaster.sh").read_text() == stub()
-    assert not (pm / "PortMaster.sh").exists()
+    assert installer.path("/opt/system/Tools/Volkyport.sh").read_text() == stub()
+    assert not (pm / "Volkyport.sh").exists()
 
     ## The installer / restore ports are gone, other ports are not.
     assert sorted(path.name for path in installer.path("/roms2/ports").iterdir()) == ["Some Game.sh"]
@@ -299,13 +299,13 @@ def test_arkos_factory_reset(tmp_path, portmaster_zip, old_install):
     assert installer.calls() == ["systemctl restart emulationstation"]
 
 
-def test_unreachable_target_changes_nothing(tmp_path, portmaster_zip):
-    ## If it can't get into the PortMaster directory it must not carry on from wherever
-    ## it is: the next steps delete "PortMaster" and unzip over the current directory.
+def test_unreachable_target_changes_nothing(tmp_path, volkyport_zip):
+    ## If it can't get into the Volkyport directory it must not carry on from wherever
+    ## it is: the next steps delete "Volkyport" and unzip over the current directory.
     installer = Installer(tmp_path, "default")
     installer.path("/roms").write_text("not a directory, so no /roms/ports")
-    put_zip(installer, portmaster_zip)
-    (installer.work / "PortMaster").mkdir()
+    put_zip(installer, volkyport_zip)
+    (installer.work / "Volkyport").mkdir()
 
     run_env = dict(installer.env, HOME=installer.home)
     result = subprocess.run(
@@ -314,7 +314,7 @@ def test_unreachable_target_changes_nothing(tmp_path, portmaster_zip):
 
     assert result.returncode == 1
     assert "nothing was installed" in result.stdout
-    assert sorted(path.name for path in installer.work.iterdir()) == ["PortMaster", "PortMaster.zip"]
+    assert sorted(path.name for path in installer.work.iterdir()) == ["Volkyport", "Volkyport.zip"]
     assert installer.calls() == []
 
 
@@ -329,11 +329,11 @@ def run_failing(installer):
     return result.stdout
 
 
-def test_broken_unzip_changes_nothing(tmp_path, portmaster_zip, old_install):
+def test_broken_unzip_changes_nothing(tmp_path, volkyport_zip, old_install):
     ## spruce put an unzip needing glibc 2.34 first on PATH (TrimUI Smart Pro S, Brick):
-    ## the reset deleted PortMaster, unpacked nothing, and said "Finished".
+    ## the reset deleted Volkyport, unpacked nothing, and said "Finished".
     installer = Installer(tmp_path, "arkos")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
     pm = old_install(installer, "/opt/system/Tools")
     write_exe(tmp_path / "bin" / "unzip", 'echo "unzip: /lib/libc.so.6: version \\`GLIBC_2.34\' not found" >&2\nexit 1\n')
 
@@ -346,37 +346,37 @@ def test_broken_unzip_changes_nothing(tmp_path, portmaster_zip, old_install):
     assert installer.calls() == []
 
 
-def test_unzip_that_unpacks_nothing(tmp_path, portmaster_zip, old_install):
+def test_unzip_that_unpacks_nothing(tmp_path, volkyport_zip, old_install):
     ## Reads the zip fine but extracts nothing: stop before the reboot, runtimes kept.
     installer = Installer(tmp_path, "rocknix")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
     pm = old_install(installer, "/roms/ports")
     real_unzip = shutil.which("unzip")
     write_exe(tmp_path / "bin" / "unzip", f'[ "$1" = "-l" ] && exec "{real_unzip}" "$@"\nexit 0\n')
 
     output = run_failing(installer)
 
-    assert "PortMaster is NOT installed" in output
+    assert "Volkyport is NOT installed" in output
     assert (pm / "libs" / "godot.squashfs").read_text() == "runtime"
     assert not (pm.parent / "temp_runtimes").exists()
     assert "shutdown -r now" not in installer.calls()
 
 
-def test_full_installer_adds_runtimes(tmp_path, portmaster_zip):
+def test_full_installer_adds_runtimes(tmp_path, volkyport_zip):
     installer = Installer(tmp_path, "arkos")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
     put_zip(installer, {"mono.squashfs": "mono", "godot.squashfs": "godot"}, name="runtimes.zip")
 
     installer.run()
 
-    libs = installer.path("/opt/system/Tools/PortMaster/libs")
+    libs = installer.path("/opt/system/Tools/Volkyport/libs")
     assert sorted(path.name for path in libs.iterdir()) == ["godot.squashfs", "mono.squashfs"]
 
 
-def test_no_es_restart_file(tmp_path, portmaster_zip):
+def test_no_es_restart_file(tmp_path, volkyport_zip):
     ## eg: the Restore port, or a tool installing over ssh.
     installer = Installer(tmp_path, "arkos")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
     no_restart = write(installer.root, "/root/no_es_restart", "")
 
     installer.run()
@@ -385,14 +385,14 @@ def test_no_es_restart_file(tmp_path, portmaster_zip):
     assert not no_restart.exists()
 
 
-def test_muos_is_left_alone(tmp_path, portmaster_zip, old_install):
-    ## muOS includes PortMaster (and a way to restore it). On releases with exfat-fuse
+def test_muos_is_left_alone(tmp_path, volkyport_zip, old_install):
+    ## muOS includes Volkyport (and a way to restore it). On releases with exfat-fuse
     ## (Banana, Jacaranda) the installer deleting itself crashes the SD card's driver,
     ## so it changes nothing at all there, itself included.
     installer = Installer(tmp_path, "muos")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
     pm = old_install(installer, "/mnt/mmc/MUOS")
-    me = write(installer.root, "/mnt/mmc/ROMS/Ports/Install.PortMaster.sh", "installer")
+    me = write(installer.root, "/mnt/mmc/ROMS/Ports/Install.Volkyport.sh", "installer")
     before = sorted(str(path) for path in installer.root.rglob("*"))
 
     run_env = dict(installer.env, HOME=installer.home)
@@ -401,7 +401,7 @@ def test_muos_is_left_alone(tmp_path, portmaster_zip, old_install):
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
 
     assert result.returncode == 1
-    assert "muOS includes PortMaster" in result.stdout
+    assert "muOS includes Volkyport" in result.stdout
     assert sorted(str(path) for path in installer.root.rglob("*")) == before
     assert (pm / "config" / "config.json").is_file()
     assert me.is_file()
@@ -409,18 +409,18 @@ def test_muos_is_left_alone(tmp_path, portmaster_zip, old_install):
 
 
 @pytest.mark.parametrize("old_style", [False, True])
-def test_batocera(tmp_path, portmaster_zip, old_style):
+def test_batocera(tmp_path, volkyport_zip, old_style):
     installer = Installer(tmp_path, "batocera")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
     generator = write(
         installer.root, "/usr/lib/python3.11/site-packages/configgen/generators/sh/shGenerator.py",
         "from generators.Generator import Generator\n" if old_style else "from ..Generator import Generator\n")
 
     installer.run()
 
-    assert installer.path("/userdata/roms/ports/PortMaster.sh").read_text() == stub()
-    assert not installer.path(XDG + "/PortMaster/PortMaster.sh").exists()
-    assert installer.path(XDG + "/PortMaster/control.txt").read_text() == portmaster_zip["PortMaster/batocera/control.txt"]
+    assert installer.path("/userdata/roms/ports/Volkyport.sh").read_text() == stub()
+    assert not installer.path(XDG + "/Volkyport/Volkyport.sh").exists()
+    assert installer.path(XDG + "/Volkyport/control.txt").read_text() == volkyport_zip["Volkyport/batocera/control.txt"]
 
     ## The system's shGenerator.py is swapped for ours, the original kept.
     expected = "knulli" if old_style else "batocera"
@@ -429,26 +429,26 @@ def test_batocera(tmp_path, portmaster_zip, old_style):
     assert installer.calls() == ["curl http://localhost:1234/reloadgames", "batocera-save-overlay "]
 
 
-def test_knulli_gets_its_own_control(tmp_path, portmaster_zip):
+def test_knulli_gets_its_own_control(tmp_path, volkyport_zip):
     ## knulli is found like Batocera, but its os-release names it, and that picks
     ## knulli/control.txt over batocera's.
-    portmaster_zip["PortMaster/batocera/control.txt"] = "batocera control\n"
-    portmaster_zip["PortMaster/knulli/control.txt"] = "knulli control\n"
+    volkyport_zip["Volkyport/batocera/control.txt"] = "batocera control\n"
+    volkyport_zip["Volkyport/knulli/control.txt"] = "knulli control\n"
     installer = Installer(tmp_path, "batocera")
     write(installer.root, "/etc/os-release", 'NAME=Batocera.linux\nOS_NAME="knulli"\n')
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
 
     assert installer.detect()['OS_NAME'] == "knulli"
     installer.run()
 
-    assert installer.path(XDG + "/PortMaster/control.txt").read_text() == "knulli control\n"
-    assert installer.path("/userdata/roms/ports/PortMaster.sh").read_text() == stub()
+    assert installer.path(XDG + "/Volkyport/control.txt").read_text() == "knulli control\n"
+    assert installer.path("/userdata/roms/ports/Volkyport.sh").read_text() == stub()
     assert installer.calls() == ["curl http://localhost:1234/reloadgames"]
 
 
-def test_batocera_patched_generator_left_alone(tmp_path, portmaster_zip):
+def test_batocera_patched_generator_left_alone(tmp_path, volkyport_zip):
     installer = Installer(tmp_path, "batocera")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
     generator = write(
         installer.root, "/usr/lib/python3.11/site-packages/configgen/generators/sh/shGenerator.py",
         "# already ours, gamecontrollerdb.txt\n")
@@ -459,67 +459,67 @@ def test_batocera_patched_generator_left_alone(tmp_path, portmaster_zip):
     assert not generator.with_name("shGenerator.py.bak").exists()
 
 
-def test_rocknix(tmp_path, portmaster_zip):
+def test_rocknix(tmp_path, volkyport_zip):
     installer = Installer(tmp_path, "rocknix")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
 
     installer.run()
 
-    ## ROCKNIX runs PortMaster/PortMaster.sh where it is.
-    assert installer.path("/storage/roms/ports/PortMaster/PortMaster.sh").read_text() == stub()
-    assert installer.path("/storage/.config/PortMaster/control.txt").read_text() == "rocknix control.txt\n"
+    ## ROCKNIX runs Volkyport/Volkyport.sh where it is.
+    assert installer.path("/storage/roms/ports/Volkyport/Volkyport.sh").read_text() == stub()
+    assert installer.path("/storage/.config/Volkyport/control.txt").read_text() == "rocknix control.txt\n"
     assert installer.calls() == ["shutdown -r now"]
 
 
-def test_rocknix_without_jelos_files(tmp_path, portmaster_zip):
-    ## Newer ROCKNIX ships only control.txt and mapper.txt in /usr/config/PortMaster.
+def test_rocknix_without_jelos_files(tmp_path, volkyport_zip):
+    ## Newer ROCKNIX ships only control.txt and mapper.txt in /usr/config/Volkyport.
     installer = Installer(tmp_path, "rocknix")
-    installer.path("/usr/config/PortMaster/PortMaster.sh").unlink()
-    installer.path("/usr/config/PortMaster/portmaster.gptk").unlink()
-    put_zip(installer, portmaster_zip)
+    installer.path("/usr/config/Volkyport/Volkyport.sh").unlink()
+    installer.path("/usr/config/Volkyport/volkyport.gptk").unlink()
+    put_zip(installer, volkyport_zip)
 
     output = installer.run()
 
     assert "can't stat" not in output and "cannot stat" not in output
-    assert installer.path("/storage/.config/PortMaster/control.txt").read_text() == "rocknix control.txt\n"
-    assert installer.path("/storage/roms/ports/PortMaster/PortMaster.sh").read_text() == stub()
+    assert installer.path("/storage/.config/Volkyport/control.txt").read_text() == "rocknix control.txt\n"
+    assert installer.path("/storage/roms/ports/Volkyport/Volkyport.sh").read_text() == stub()
 
 
 @pytest.mark.parametrize("cfw", ["retrodeck", "retrodeck_outside"])
-def test_retrodeck(tmp_path, portmaster_zip, cfw):
+def test_retrodeck(tmp_path, volkyport_zip, cfw):
     installer = Installer(tmp_path, cfw)
-    put_zip(installer, portmaster_zip)
-    write(installer.root, "/run/media/deck/sd/retrodeck/roms/portmaster/Install.PortMaster.sh", "installer")
+    put_zip(installer, volkyport_zip)
+    write(installer.root, "/run/media/deck/sd/retrodeck/roms/volkyport/Install.Volkyport.sh", "installer")
 
     installer.run()
 
-    scripts = installer.path("/run/media/deck/sd/retrodeck/roms/portmaster")
-    assert sorted(path.name for path in scripts.iterdir()) == ["PortMaster.sh"]
-    assert (scripts / "PortMaster.sh").read_text() == stub("retrodeck")
+    scripts = installer.path("/run/media/deck/sd/retrodeck/roms/volkyport")
+    assert sorted(path.name for path in scripts.iterdir()) == ["Volkyport.sh"]
+    assert (scripts / "Volkyport.sh").read_text() == stub("retrodeck")
     ## RetroDECK can't restart ES-DE from here.
     assert installer.calls() == []
 
 
-def test_spruce(tmp_path, portmaster_zip):
+def test_spruce(tmp_path, volkyport_zip):
     installer = Installer(tmp_path, "spruce")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
 
     installer.run()
 
-    pm = installer.path("/mnt/SDCARD/Persistent/portmaster/PortMaster")
-    assert (pm / "PortMaster.sh").read_text() == stub("spruce")
+    pm = installer.path("/mnt/SDCARD/Persistent/volkyport/Volkyport")
+    assert (pm / "Volkyport.sh").read_text() == stub("spruce")
     assert (pm / "control.txt").read_text() == (PM_DIR / "spruce" / "control.txt").read_text()
     assert installer.calls() == []
 
 
-def test_trimui(tmp_path, portmaster_zip):
-    ## TrimUI bundles PortMaster (trimui.portmaster.zip), a stray run just puts it in the right place.
+def test_trimui(tmp_path, volkyport_zip):
+    ## TrimUI bundles Volkyport (trimui.volkyport.zip), a stray run just puts it in the right place.
     installer = Installer(tmp_path, "trimui")
-    put_zip(installer, portmaster_zip)
+    put_zip(installer, volkyport_zip)
 
     installer.run()
 
-    pm = installer.path("/mnt/SDCARD/Apps/PortMaster/PortMaster")
+    pm = installer.path("/mnt/SDCARD/Apps/Volkyport/Volkyport")
     assert (pm / "pugwash").is_file()
     assert (pm / "control.txt").read_text() == (PM_DIR / "trimui" / "control.txt").read_text()
     assert installer.calls() == []
@@ -529,4 +529,4 @@ def test_trimui(tmp_path, portmaster_zip):
 ## The makeself header around it.
 def test_header_logs_once():
     header = (REPO_DIR / "tools" / "makeself-header.sh").read_text()
-    assert header.count('tee -a "\\$HOME/portmaster.log"') == 1
+    assert header.count('tee -a "\\$HOME/volkyport.log"') == 1

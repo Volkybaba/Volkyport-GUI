@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# pytest plugin for the PortMaster Test Suite: writes "<done> <total> <test id>" to the
+# pytest plugin for the Volkyport Test Suite: writes "<done> <total> <test id>" to the
 # file in $PMTEST_PROGRESS as tests finish, for the progress bar on screen.
 
 import os

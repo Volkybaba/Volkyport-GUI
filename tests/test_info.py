@@ -57,7 +57,7 @@ def test_load_v3_blank_runtime():
 @pytest.mark.parametrize('version', [1, 2, 3, "3"])
 @pytest.mark.parametrize('info', [{}, {'attr': {}}, {'attr': {'title': "Game"}}], ids=['no-attr', 'empty-attr', 'no-runtime'])
 def test_load_old_version_without_runtime(version, info):
-    ## Hand-written port.json files leave these out; this stopped PortMaster starting.
+    ## Hand-written port.json files leave these out; this stopped Volkyport starting.
     info = port_info_load(dict(info, version=version))
 
     assert info['version'] == 4

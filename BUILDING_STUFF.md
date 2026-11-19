@@ -26,7 +26,7 @@ Message cards for `pm_message`/`pm_show_error`. Needs `libsdl2-dev` and `xxd`; t
 git clone "https://github.com/PortsMaster/portmsg.git"
 cd portmsg
 make
-cp portmsg.aarch64 ../PortMaster/
+cp portmsg.aarch64 ../Volkyport/
 ```
 
 # XDELTA3 Compilation

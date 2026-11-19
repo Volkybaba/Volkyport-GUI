@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# The PortMaster Test Suite port (tools/test_suite): its results, summary and report,
+# The Volkyport Test Suite port (tools/test_suite): its results, summary and report,
 # and its fifo client driving a real pugwash.
 
 import io
@@ -128,10 +128,10 @@ def test_write_report(tmp_path):
 
     report = suite.write_report(
         tmp_path / "reports" / "r.zip", work, sections((suite.PASS, "fine")), {'cfw': "test"},
-        extra_files=[(pugwash_log, "portmaster/pugwash.txt"), (tmp_path / "missing.txt", "portmaster/missing.txt")])
+        extra_files=[(pugwash_log, "volkyport/pugwash.txt"), (tmp_path / "missing.txt", "volkyport/missing.txt")])
 
     with zipfile.ZipFile(report) as zf:
-        assert sorted(zf.namelist()) == ["portmaster/pugwash.txt", "pytest/junit.xml", "run.log", "summary.json", "summary.txt"]
+        assert sorted(zf.namelist()) == ["pytest/junit.xml", "run.log", "summary.json", "summary.txt", "volkyport/pugwash.txt"]
         data = json.loads(zf.read("summary.json"))
 
     assert data['info'] == {'cfw': "test"}
@@ -185,11 +185,11 @@ def test_write_report_scrubs(tmp_path):
 
     report = suite.write_report(
         tmp_path / "r.zip", work, sections((suite.PASS, "fine")), {'cfw': "test"},
-        extra_files=[(log, "portmaster/pugwash.txt")], names=["mydevice"])
+        extra_files=[(log, "volkyport/pugwash.txt")], names=["mydevice"])
 
     with zipfile.ZipFile(report) as zf:
         assert zf.read("device/dmesg.txt").decode() == "wlan0: xx:xx:xx:xx:xx:xx on device-host at x.x.x.20\n"
-        assert zf.read("portmaster/pugwash.txt").decode() == "device-host: fetched from x.x.x.20\n"
+        assert zf.read("volkyport/pugwash.txt").decode() == "device-host: fetched from x.x.x.20\n"
         ## Not text: as it was.
         assert zf.read("binary.bin") == b"\xff\xfe 192.168.1.20"
         assert json.loads(zf.read("summary.json"))['scrubbed'] is True
@@ -245,31 +245,31 @@ def test_pick_work_dir_no_fifo(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize("stub, hooks", [
-    ("PortMaster.sh", ""),
-    ("spruce/PortMaster.txt", "spruce"),
-    ("muos/PortMaster.txt", "muos"),
+    ("Volkyport.sh", ""),
+    ("spruce/Volkyport.txt", "spruce"),
+    ("muos/Volkyport.txt", "muos"),
     ])
 def test_launcher_hooks(tmp_path, stub, hooks):
-    pm = tmp_path / "PortMaster"
+    pm = tmp_path / "Volkyport"
     pm.mkdir()
-    shutil.copy(str(PM_DIR / stub), str(pm / "PortMaster.sh"))
+    shutil.copy(str(PM_DIR / stub), str(pm / "Volkyport.sh"))
 
     assert suite.launcher_hooks(pm) == hooks
 
 
 def test_launcher_hooks_trimui(tmp_path):
-    ## TrimUI's stub is launch.sh next to the PortMaster folder.
-    (tmp_path / "PortMaster").mkdir()
-    shutil.copy(str(PM_DIR / "trimui" / "PortMaster.txt"), str(tmp_path / "launch.sh"))
+    ## TrimUI's stub is launch.sh next to the Volkyport folder.
+    (tmp_path / "Volkyport").mkdir()
+    shutil.copy(str(PM_DIR / "trimui" / "Volkyport.txt"), str(tmp_path / "launch.sh"))
 
-    assert suite.launcher_hooks(tmp_path / "PortMaster") == "trimui"
+    assert suite.launcher_hooks(tmp_path / "Volkyport") == "trimui"
 
 
 def fake_controlfolder(tmp_path, cfw=None):
-    pm = tmp_path / "PortMaster"
+    pm = tmp_path / "Volkyport"
     (pm / "utils").mkdir(parents=True)
-    shutil.copy(str(PM_DIR / "utils" / "pm_launch.txt"), str(pm / "utils" / "pm_launch.txt"))
-    shutil.copy(str(PM_DIR / ((cfw + "/PortMaster.txt") if cfw else "PortMaster.sh")), str(pm / "PortMaster.sh"))
+    shutil.copy(str(PM_DIR / "utils" / "vp_launch.txt"), str(pm / "utils" / "vp_launch.txt"))
+    shutil.copy(str(PM_DIR / ((cfw + "/Volkyport.txt") if cfw else "Volkyport.sh")), str(pm / "Volkyport.sh"))
     if cfw:
         (pm / cfw).mkdir()
         shutil.copy(str(PM_DIR / cfw / "launch_hooks.txt"), str(pm / cfw / "launch_hooks.txt"))
@@ -321,10 +321,10 @@ def test_launcher_env_rocknix(tmp_path, monkeypatch):
     assert "DISPLAY_WIDTH" not in env and "PM_VERSION" not in env
 
 
-def test_launcher_env_old_portmaster(tmp_path):
-    ## A PortMaster from before PM_LAUNCH_ENV_ONLY would run the whole launcher: not asked.
+def test_launcher_env_old_volkyport(tmp_path):
+    ## A Volkyport from before PM_LAUNCH_ENV_ONLY would run the whole launcher: not asked.
     pm = fake_controlfolder(tmp_path)
-    launch = pm / "utils" / "pm_launch.txt"
+    launch = pm / "utils" / "vp_launch.txt"
     launch.write_text(launch.read_text().replace("PM_LAUNCH_ENV_ONLY", "PM_SOMETHING_ELSE"))
 
     assert suite.launcher_env(pm) is None
@@ -335,8 +335,8 @@ def test_port_zip_layout():
     ## What do_release.sh packs (tested end to end in test_build.py).
     port_json = json.loads((REPO_DIR / "tools" / "test_suite" / "pmtest" / "port.json").read_text())
     assert port_json['name'] == "pmtest.zip"
-    assert port_json['items'] == ["PortMaster Test Suite.sh", "pmtest/"]
-    assert (REPO_DIR / "tools" / "test_suite" / "PortMaster Test Suite.sh").is_file()
+    assert port_json['items'] == ["Volkyport Test Suite.sh", "pmtest/"]
+    assert (REPO_DIR / "tools" / "test_suite" / "Volkyport Test Suite.sh").is_file()
 
 
 ################################################################################
@@ -436,7 +436,7 @@ def make_report(folder, name, info, states, environment=None, os_release=None, c
 def test_matrix(tmp_path):
     reports = tmp_path / "reports"
     base = {'cfw': "muOS", 'cfw_version': "2601.0_JACARANDA", 'device': "rg35xx-h", 'arch': "aarch64",
-            'python': "3.11.8", 'sdl': "SDL 2 28 5", 'portmaster': "2026-10-13_0969", 'video_drivers': ["mali"]}
+            'python': "3.11.8", 'sdl': "SDL 2 28 5", 'volkyport': "2026-10-13_0969", 'video_drivers': ["mali"]}
     failed = "Failed:\n- tests.test_a::test_x: assert 1 == 2\nSkipped:\n- 2 x no shellcheck"
 
     make_report(reports, "old.zip", dict(base, started="2026-10-13T10:00:00"), [
@@ -469,7 +469,7 @@ def test_matrix(tmp_path):
     assert (test, message, len(found)) == ("tests.test_a::test_x", "assert 1 == 2", 2)
 
     page = matrix.render_html(rows)
-    assert page.startswith("<title>PortMaster Test Matrix</title>")
+    assert page.startswith("<title>Volkyport Test Matrix</title>")
     assert "Test build <span class=\"data\">2026-10-13_0969</span>." in page
     assert "&lt;rg-cubexx&gt;" in page and "<rg-cubexx>" not in page
     assert "<script" not in page
@@ -514,7 +514,7 @@ def test_matrix_muos_release(version, os_name, expected):
 
 def test_matrix_groups_date_versions_by_month(tmp_path):
     ## ArkOS 02012025-3 and 02012025 are separate releases, one heading for February 2025.
-    base = {'arch': "aarch64", 'python': "3.7.5", 'sdl': "SDL 2 26 2", 'portmaster': "2026-10-15_0669", 'cfw': "ArkOS"}
+    base = {'arch': "aarch64", 'python': "3.7.5", 'sdl': "SDL 2 26 2", 'volkyport': "2026-10-15_0669", 'cfw': "ArkOS"}
     passed = [("install", suite.PASS, "installed", "")]
     make_report(tmp_path, "a.zip", dict(base, cfw_version="02012025-3", device="RG353M", started="2026-10-15T01:00:00"), passed)
     make_report(tmp_path, "b.zip", dict(base, cfw_version="02012025", device="RG353V", started="2026-10-15T02:00:00"), passed)
@@ -545,7 +545,7 @@ def test_matrix_knulli_release(built, expected):
 def test_matrix_by_cfw_then_version(tmp_path):
     ## CFW, then its versions newest release first (version number when there's no date,
     ## Unknown last), then devices.
-    base = {'arch': "aarch64", 'python': "3.11.8", 'sdl': "SDL 2 28 5", 'portmaster': "2026-10-15_0369"}
+    base = {'arch': "aarch64", 'python': "3.11.8", 'sdl': "SDL 2 28 5", 'volkyport': "2026-10-15_0369"}
     passed = [("install", suite.PASS, "installed", "")]
     passed_with_device = passed + [("device", suite.INFO, "knulli 42 on trimui-brick-pro (aarch64), Python 3.12.8", "")]
     for name, info, os_release in (
@@ -596,7 +596,7 @@ def test_matrix_by_cfw_then_version(tmp_path):
     row = matrix.read_report(tmp_path / "knulli-device.zip")
     assert row['sections']['device']['summary'] == "knulli scarab (reported as 42) on trimui-brick-pro (aarch64), Python 3.12.8"
 
-    rows[0]['portmaster'], rows[1]['portmaster'] = "2026-10-13_0469", "2026-10-15_0569"
+    rows[0]['volkyport'], rows[1]['volkyport'] = "2026-10-13_0469", "2026-10-15_0569"
     assert ' 3 test builds, <span class="data">2026-10-13_0469</span> to <span class="data">2026-10-15_0569</span>.' in matrix.render_html(rows)
     assert "released 2025-05-05" in page and "alpha" not in page and ">42<" not in page
 
@@ -684,7 +684,7 @@ def test_matrix_major_version(cfw, version, released, expected):
 
 
 def test_matrix_device_grid(tmp_path):
-    base = {'arch': "aarch64", 'python': "3.11.8", 'sdl': "SDL 2 28 5", 'portmaster': "2026-10-15_0969"}
+    base = {'arch': "aarch64", 'python': "3.11.8", 'sdl': "SDL 2 28 5", 'volkyport': "2026-10-15_0969"}
     passed = [("install", suite.PASS, "installed", "")]
     failed = [("install", suite.FAIL, "not installed", "")]
     for name, info, states in (
@@ -772,7 +772,7 @@ def test_device_details():
     assert suite.device_details("PMTEST_DEVICE_INFO {not json\n", {}) == {}
 
 
-BRICK_WARNING = ("/mnt/SDCARD/Roms/ports/pmtest/tree/PortMaster/exlibs/sdl2/dll.py:299: DLLWarning: "
+BRICK_WARNING = ("/mnt/SDCARD/Roms/ports/pmtest/tree/Volkyport/exlibs/sdl2/dll.py:299: DLLWarning: "
                  "OSError('/mnt/SDCARD/spruce/brick/sdl2/libSDL2-2.0.so.0.3200.6: file too short')")
 
 
@@ -899,14 +899,14 @@ def test_send_report(tmp_path, receiver):
 
 
 def test_ssl_context():
-    ## PortMaster's certifi bundle, not the device's: some CFWs have none.
+    ## Volkyport's certifi bundle, not the device's: some CFWs have none.
     context = suite.ssl_context()
     assert context.verify_mode == suite.ssl.CERT_REQUIRED
     assert len(context.get_ca_certs()) > 100
 
 
 def test_summary_entries_sent():
-    sections = [suite.Section("install", "Install PortMaster")]
+    sections = [suite.Section("install", "Install Volkyport")]
     sections[0].set(suite.PASS, "installed")
 
     def texts(sent):
@@ -925,8 +925,8 @@ def test_summary_entries_sent():
 
 def test_pending_reports(tmp_path):
     ## Reports from earlier runs: uploaded ones are done, kept/failed ones are offered again.
-    first = make_report(tmp_path, "a.zip", {'portmaster': "2026-10-14_0169"}, [("install", suite.PASS, "installed", "")])
-    second = make_report(tmp_path, "b.zip", {'portmaster': "2026-10-14_0469"}, [("install", suite.PASS, "installed", "")])
+    first = make_report(tmp_path, "a.zip", {'volkyport': "2026-10-14_0169"}, [("install", suite.PASS, "installed", "")])
+    second = make_report(tmp_path, "b.zip", {'volkyport': "2026-10-14_0469"}, [("install", suite.PASS, "installed", "")])
     os.utime(str(first), (1000, 1000))
     (tmp_path / "junk.zip").write_bytes(b"not a zip")
     os.utime(str(tmp_path / "junk.zip"), (2000, 2000))
@@ -948,7 +948,7 @@ def test_pending_reports(tmp_path):
 def test_upload_question():
     report = Path("r.zip")
     assert suite.upload_question([(report, "2026-10-14_0469", True)]) == (
-        "I see you've already run PortMaster 2026-10-14_0469 and chose not to upload it.\n\nWould you like to upload it now?")
+        "I see you've already run Volkyport 2026-10-14_0469 and chose not to upload it.\n\nWould you like to upload it now?")
     assert "couldn't be uploaded" in suite.upload_question([(report, "2026-10-14_0469", False)])
     assert suite.upload_question([(report, None, True)]).startswith("I see you've already run the Test Suite and")
     assert suite.upload_question([(report, "a", True), (report, "b", False)]).startswith("I see 2 earlier runs")
@@ -984,7 +984,7 @@ def test_offer_pending_uploads(tmp_path, monkeypatch, receiver):
     reports = tmp_path / "reports"
     reports.mkdir()
     monkeypatch.setattr(suite, "REPORTS", reports)
-    report = make_report(reports, "old.zip", {'portmaster': "2026-10-14_0469"}, [("install", suite.PASS, "installed", "")])
+    report = make_report(reports, "old.zip", {'volkyport': "2026-10-14_0469"}, [("install", suite.PASS, "installed", "")])
     suite.mark_report(report, "kept")
 
     ## Not now: stays pending, asked again next time.
@@ -1019,8 +1019,8 @@ def test_offer_pending_uploads_fails(tmp_path, monkeypatch):
 
 
 def test_logs_set_aside(tmp_path):
-    ## The tester's PortMaster logs stay out of the report and come back afterwards.
-    pm, saved = tmp_path / "PortMaster", tmp_path / "pmtest" / "saved-logs"
+    ## The tester's Volkyport logs stay out of the report and come back afterwards.
+    pm, saved = tmp_path / "Volkyport", tmp_path / "pmtest" / "saved-logs"
     pm.mkdir()
     (pm / "pugwash.txt").write_text("two years of history\n")
     (pm / "log.txt").write_text("last launch\n")
@@ -1041,20 +1041,20 @@ def test_logs_set_aside(tmp_path):
 
 def test_logs_after_a_crash(tmp_path):
     ## A run that never restored them: the next run does, keeping what was logged since.
-    pm, saved = tmp_path / "PortMaster", tmp_path / "saved-logs"
+    pm, saved = tmp_path / "Volkyport", tmp_path / "saved-logs"
     pm.mkdir()
     (pm / "pugwash.txt").write_text("old\n")
     suite.set_aside_logs(pm, saved)
-    (pm / "pugwash.txt").write_text("crashed run, then PortMaster used\n")
+    (pm / "pugwash.txt").write_text("crashed run, then Volkyport used\n")
 
     suite.set_aside_logs(pm, saved)
     assert (pm / "pugwash.txt").read_text() == ""
     suite.restore_logs(pm, saved)
-    assert (pm / "pugwash.txt").read_text() == "old\ncrashed run, then PortMaster used\n"
+    assert (pm / "pugwash.txt").read_text() == "old\ncrashed run, then Volkyport used\n"
 
 
 def test_main_restores_logs(tmp_path, monkeypatch):
-    pm = tmp_path / "PortMaster"
+    pm = tmp_path / "Volkyport"
     pm.mkdir()
     (pm / "pugwash.txt").write_text("theirs\n")
     monkeypatch.setattr(suite, "SAVED_LOGS", tmp_path / "saved-logs")
@@ -1075,13 +1075,13 @@ def test_main_restores_logs(tmp_path, monkeypatch):
 
 
 def test_step_smoke_fetches_the_port_list(tmp_path, monkeypatch):
-    ## A PortMaster that was never opened has no port list, so the online test can't use --no-check.
+    ## A Volkyport that was never opened has no port list, so the online test can't use --no-check.
     commands = []
 
     class SmokeSuite(suite.Suite):
         def __init__(self):
             self.work = tmp_path
-            self.controlfolder = tmp_path / "PortMaster"
+            self.controlfolder = tmp_path / "Volkyport"
 
         def say(self, text):
             pass

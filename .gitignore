@@ -178,18 +178,18 @@ crowdin.yml
 pugwash.txt
 harbourmaster.txt
 theme_server.txt
-PortMaster.zip
+Volkyport.zip
 pylibs.zip
 version
 version.json
 do_test.sh
 
-# PortMaster Installer scripts.
+# Volkyport Installer scripts.
 makeself*/
 makeself-*.run
 runtimes*.zip
-Install*PortMaster.sh
-*.portmaster.zip
+Install*Volkyport.sh
+*.volkyport.zip
 pm_devices.cfg
 
 # Debug things

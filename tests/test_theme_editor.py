@@ -83,8 +83,8 @@ def test_theme_files(tmp_path):
 
     assert files['image'] == ["a.png", "images/b.JPG"]
     assert files['sound'] == ["click.ogg"]
-    ## The theme's fonts, then PortMaster's (the Noto fonts even before they're unpacked;
-    ## the PortMaster Test Suite leaves them out, so only where PortMaster has them).
+    ## The theme's fonts, then Volkyport's (the Noto fonts even before they're unpacked;
+    ## the Volkyport Test Suite leaves them out, so only where Volkyport has them).
     assert files['font'][0] == "font.ttf" and "DejaVuSans.ttf" in files['font']
     if (schema.RESOURCES / "NotoSans.tar.xz").is_file() or (schema.RESOURCES / "NotoSansJP-Regular.ttf").is_file():
         assert "NotoSansJP-Regular.ttf" in files['font']
@@ -130,7 +130,7 @@ def test_schema_is_json(tmp_path):
     assert "Light Mode" in whole['names']['schemes'] and "accent" in whole['names']['colors']
     assert "#info" in whole['top'] and "default-scheme" in whole['info']
     assert "#styles" in whole['top'] and whole['keys']['style'] == {'type': "style"}
-    ## Everything the default theme uses is known: no "PortMaster doesn't use" for its own keys.
+    ## Everything the default theme uses is known: no "Volkyport doesn't use" for its own keys.
     default = json.loads((PM_DIR / "pylibs" / "default_theme" / "theme.json").read_text())
     assert set(key.split("[")[0] for key in default) - set(whole['top']) - set(whole['sections']) == set()
     assert set(default["#info"]) <= set(whole['info'])
@@ -139,7 +139,7 @@ def test_schema_is_json(tmp_path):
 
 
 def region_key_problems(theme_data):
-    """[(section, region, key)] of keys PortMaster doesn't know, as the editor's checks find them."""
+    """[(section, region, key)] of keys Volkyport doesn't know, as the editor's checks find them."""
     known = schema.region_keys()
     found = []
 
@@ -163,7 +163,7 @@ def region_key_problems(theme_data):
 def test_default_theme_keys_are_known():
     data = json.loads((PM_DIR / "pylibs" / "default_theme" / "theme.json").read_text(encoding="utf-8"))
     problems = region_key_problems(data)
-    ## Known: typos PortMaster ignores. Fixing them changes how the default theme looks.
+    ## Known: typos Volkyport ignores. Fixing them changes how the default theme looks.
     known = [("on_screen_keyboard", "keyboard", "barwidth"), ("filter_list", "filter_list", "list-spacer")]
     assert [problem for problem in problems if problem not in known] == []
 

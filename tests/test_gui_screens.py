@@ -187,7 +187,7 @@ def test_disclaimer_quit(waited, monkeypatch, answer):
 def test_warning_screen(waited, monkeypatch):
     from pugwash.scenes import startup
     warnings = [
-        ('spruce', "SpruceOS is not supported by PortMaster.", "Switch."),
+        ('spruce', "SpruceOS is not supported by Volkyport.", "Switch."),
         ('lowram', "Low RAM.", None),
         ('other', "Other.", "Switch."),
         ]
@@ -196,7 +196,7 @@ def test_warning_screen(waited, monkeypatch):
 
     text = root_scene(waited).tags['disclaimer_text'].text
     ## Each reason, then each suggestion once.
-    assert text == "SpruceOS is not supported by PortMaster.\nLow RAM.\nOther.\nMany ports will not work.\n\nSwitch."
+    assert text == "SpruceOS is not supported by Volkyport.\nLow RAM.\nOther.\nMany ports will not work.\n\nSwitch."
     assert "I Understand" in bar(root_scene(waited))
 
     press(waited, monkeypatch, 'A')

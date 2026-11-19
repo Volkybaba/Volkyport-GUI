@@ -87,7 +87,7 @@ def served_zip(app, monkeypatch, tmp_path):
 
 
 def test_do_install_checks_md5_source(app, hm_dirs, served_zip):
-    ## The self-update passes version.json's md5: it was dropped, so PortMaster.zip went unchecked.
+    ## The self-update passes version.json's md5: it was dropped, so Volkyport.zip went unchecked.
     app.do_install("Test Port", served_zip.url, md5_source=served_zip.md5)
 
     assert served_zip.md5_sources == [served_zip.md5]
@@ -145,7 +145,7 @@ def test_do_update_ports(app, ports_json_data, monkeypatch):
     app.do_update_ports()
 
     assert len(fetched) == 2
-    assert sorted(app.hm.sources['pm'].ports) == sorted(ports_json_data['ports'])
+    assert sorted(app.hm.sources['vp'].ports) == sorted(ports_json_data['ports'])
     assert_idle(app)
 
 
@@ -163,7 +163,7 @@ def test_update_gamelist_xml(app, hm_dirs, ports_json_data, tmp_path, monkeypatc
     data['utils']['gameinfo.zip'].update({'md5': hashlib.md5(gameinfo).hexdigest(), 'size': len(gameinfo)})
 
     monkeypatch.setattr(net, "fetch_json", lambda url: json.loads(json.dumps(data)))
-    app.hm.sources['pm'].update()
+    app.hm.sources['vp'].update()
 
     def download(file_name, file_url, md5_source=None, md5_result=None, callback=None, no_check=False):
         file_name.write_bytes(gameinfo)
@@ -179,7 +179,7 @@ def test_update_gamelist_xml(app, hm_dirs, ports_json_data, tmp_path, monkeypatc
     ## Only ports that are installed get their gameinfo.xml.
     assert added == [hm_dirs['ports_dir'] / "testport" / "gameinfo.xml"]
     assert not (hm_dirs['ports_dir'] / "notinstalled").exists()
-    assert (app.hm.cfg_dir / "gameinfo_pm.zip").read_bytes() == gameinfo
+    assert (app.hm.cfg_dir / "gameinfo_vp.zip").read_bytes() == gameinfo
     assert_idle(app)
 
 

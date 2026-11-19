@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# pugwash.update.portmaster_check_update(): PortMaster's self-update check, and
+# pugwash.update.volkyport_check_update(): Volkyport's self-update check, and
 # config files broken by a power off while saving.
 
 import datetime
@@ -19,13 +19,13 @@ def update(pugwash, monkeypatch, tmp_path):
     import pugwash.update as update
 
     tools = tmp_path / "updtools"
-    (tools / "PortMaster" / "config").mkdir(parents=True)
+    (tools / "Volkyport" / "config").mkdir(parents=True)
     monkeypatch.setattr(harbourmaster, "HM_TOOLS_DIR", tools)
-    monkeypatch.setattr(update, "PORTMASTER_VERSION", "2026.06.23-1000")
-    monkeypatch.setattr(update, "PORTMASTER_RELEASE_CHANNEL", "stable")
-    monkeypatch.setattr(update, "PORTMASTER_MIN_VERSION", "2024.01.01-0000")
+    monkeypatch.setattr(update, "VOLKYPORT_VERSION", "2026.06.23-1000")
+    monkeypatch.setattr(update, "VOLKYPORT_RELEASE_CHANNEL", "stable")
+    monkeypatch.setattr(update, "VOLKYPORT_MIN_VERSION", "2024.01.01-0000")
     monkeypatch.setattr(update, "HarbourMaster", lambda *args, **kwargs: "hm")
-    update.cfg_file = tools / "PortMaster" / "config" / "config.json"
+    update.cfg_file = tools / "Volkyport" / "config" / "config.json"
     update.tools = tools
     return update
 
@@ -61,7 +61,7 @@ class FakePM:
 
 
 def release(version, channel="stable"):
-    return {channel: {"version": version, "url": f"https://example.com/{version}/PortMaster.zip", "md5": "abc"}}
+    return {channel: {"version": version, "url": f"https://example.com/{version}/Volkyport.zip", "md5": "abc"}}
 
 
 def write_config(update, data):
@@ -74,7 +74,7 @@ def config(update):
 
 def check(update, pm, **config_values):
     cfg = {'no-check': False, 'offline': False, **config_values}
-    return update.portmaster_check_update(pm, cfg, None), cfg
+    return update.volkyport_check_update(pm, cfg, None), cfg
 
 
 def test_newer_version_installs(update):
@@ -83,9 +83,9 @@ def test_newer_version_installs(update):
     result, cfg = check(update, pm)
 
     assert result is True
-    assert "new version of PortMaster (2026.10.18-0059)" in pm.boxes[0]
-    assert pm.installs == [("PortMaster", "https://example.com/2026.10.18-0059/PortMaster.zip", "abc")]
-    assert (update.tools / "PortMaster" / ".pugwash-reboot").is_file()
+    assert "new version of Volkyport (2026.10.18-0059)" in pm.boxes[0]
+    assert pm.installs == [("Volkyport", "https://example.com/2026.10.18-0059/Volkyport.zip", "abc")]
+    assert (update.tools / "Volkyport" / ".pugwash-reboot").is_file()
     assert config(update)['update_checked']
     ## Asked under no-check, so the HarbourMaster made for it doesn't update sources.
     assert cfg['no-check'] is True
@@ -179,16 +179,16 @@ def test_konami_reinstall(update):
     pm = FakePM(release("2026.06.23-1000"))
 
     assert check(update, pm)[0] is True
-    assert "reinstall PortMaster" in pm.boxes[0]
+    assert "reinstall Volkyport" in pm.boxes[0]
 
 
 def test_unknown_channel_is_reset(update):
-    from pugwash import PORTMASTER_RELEASE_VALUES
+    from pugwash import VOLKYPORT_RELEASE_VALUES
     write_config(update, {"release_channel": "nightly"})
-    pm = FakePM(release("2026.06.23-1000", channel=PORTMASTER_RELEASE_VALUES[-1]))
+    pm = FakePM(release("2026.06.23-1000", channel=VOLKYPORT_RELEASE_VALUES[-1]))
 
     check(update, pm)
-    assert config(update)['release_channel'] == PORTMASTER_RELEASE_VALUES[-1]
+    assert config(update)['release_channel'] == VOLKYPORT_RELEASE_VALUES[-1]
 
 
 @pytest.mark.parametrize("contents", ["", "{", "\x00\x00\x00", "[1]", "\xff\xfe"])
@@ -206,7 +206,7 @@ def test_broken_config_json(update, contents):
     ["stable"],
     ])
 def test_bad_version_json(update, info):
-    ## A broken version.json on the server must not stop PortMaster from starting.
+    ## A broken version.json on the server must not stop Volkyport from starting.
     pm = FakePM(info)
     assert check(update, pm)[0] is False
     assert pm.installs == []
@@ -216,7 +216,7 @@ def test_bad_version_json(update, info):
 ## HarbourMaster's own config files
 @pytest.mark.parametrize("contents", [b"", b"{", b"\x00" * 64, b"[]", b"\xff\xfe\xfa"])
 def test_broken_config_json_starts_afresh(make_hm, hm_dirs, contents, callback):
-    cfg_file = hm_dirs['tools_dir'] / "PortMaster" / "config" / "config.json"
+    cfg_file = hm_dirs['tools_dir'] / "Volkyport" / "config" / "config.json"
     make_hm()
     cfg_file.write_bytes(contents)
 
@@ -254,8 +254,8 @@ def test_json_load_dict_default_is_copied(tmp_path):
 @pytest.mark.sdl
 def test_gui_get_config_broken(gui, monkeypatch, tmp_path):
     tools = tmp_path / "guitools"
-    (tools / "PortMaster" / "config").mkdir(parents=True)
-    (tools / "PortMaster" / "config" / "config.json").write_text("{")
+    (tools / "Volkyport" / "config").mkdir(parents=True)
+    (tools / "Volkyport" / "config" / "config.json").write_text("{")
     monkeypatch.setattr(harbourmaster, "HM_TOOLS_DIR", tools)
     monkeypatch.setattr(gui, "hm", None)
 
@@ -282,4 +282,4 @@ def test_unreadable_themes_json(pugwash, hm, contents):
     (hm.cfg_dir / "themes.json").write_text(contents)
     downloader = ThemeDownloader(SimpleNamespace(hm=hm), None)
 
-    assert downloader._config['name'] == "PortMaster Themes"
+    assert downloader._config['name'] == "Volkyport Themes"

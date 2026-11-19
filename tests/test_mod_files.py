@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-PM_DIR = Path(__file__).resolve().parent.parent / "PortMaster"
+PM_DIR = Path(__file__).resolve().parent.parent / "Volkyport"
 
 ## get_controls as control.txt's, with no device GUID: the whole gamecontrollerdb.
 FAKE_GET_CONTROLS = 'get_controls() { sdl_controllerconfig="$(printf "%0${SDL_SIZE}d" 0)"; }\n'
@@ -40,7 +40,7 @@ def test_emuelec_get_controls_keeps_a_small_config():
     assert result.stdout.strip() == "len=300"
 
 
-## get_controls as control.txt's: SDL reads PortMaster's copy in /tmp.
+## get_controls as control.txt's: SDL reads Volkyport's copy in /tmp.
 FAKE_GET_CONTROLS_FILE = ('get_controls() { export SDL_GAMECONTROLLERCONFIG_FILE=/tmp/gamecontrollerdb.txt; '
                           'sdl_controllerconfig="$(printf "%0${SDL_SIZE}d" 0)"; }\n')
 
@@ -65,7 +65,7 @@ def test_emuelec_uses_the_users_mappings(tmp_path):
 
 
 @pytest.mark.parametrize("user_db", [None, ""])
-def test_emuelec_without_user_mappings_keeps_portmasters(tmp_path, user_db):
-    ## No database of its own (or an empty one): PortMaster's, or SDL would have no mappings at all.
+def test_emuelec_without_user_mappings_keeps_volkyports(tmp_path, user_db):
+    ## No database of its own (or an empty one): Volkyport's, or SDL would have no mappings at all.
     used, _ = emuelec_db_file(tmp_path, user_db)
     assert used == "/tmp/gamecontrollerdb.txt"

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 #
 # Starts pugwash headless in fifo_control mode and drives it the same way
-# PortMaster/PortMasterDialog.txt does:
+# Volkyport/VolkyportDialog.txt does:
 #
 #   printf "WAIT" > $PM_DONE
 #   echo $(printf "%s\1" "$@") > $PM_PIPE

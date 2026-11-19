@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# Collects PortMaster Test Suite reports over the LAN. Build the suite with
+# Collects Volkyport Test Suite reports over the LAN. Build the suite with
 #
 #   PM_PMTEST_UPLOAD=http://<this machine>:8770/ ./do_release.sh testsuite
 #
@@ -108,7 +108,7 @@ def make_handler(folder, log=print):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Collects PortMaster Test Suite reports.")
+    parser = argparse.ArgumentParser(description="Collects Volkyport Test Suite reports.")
     parser.add_argument("folder")
     parser.add_argument("--port", type=int, default=8770)
     parser.add_argument("--bind", default="")

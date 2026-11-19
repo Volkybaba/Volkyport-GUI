@@ -2,7 +2,7 @@
 #
 # pugwash.theme: requirement tags in theme keys, merging, the installed and
 # downloadable themes list, and broken custom themes (they must never stop
-# PortMaster from starting).
+# Volkyport from starting).
 
 import json
 from types import SimpleNamespace
@@ -71,12 +71,12 @@ def test_theme_merge_leaves_both_alone(theme):
 @pytest.fixture
 def engine(theme, hm, monkeypatch):
     monkeypatch.setattr(harbourmaster, "HM_TOOLS_DIR", hm.tools_dir)
-    (hm.tools_dir / "PortMaster" / "themes").mkdir(parents=True, exist_ok=True)
+    (hm.tools_dir / "Volkyport" / "themes").mkdir(parents=True, exist_ok=True)
     return theme.ThemeEngine(SimpleNamespace(hm=hm))
 
 
 def add_theme(hm, folder, name=None, data=None, text=None, md5=None, screenshot=None):
-    theme_dir = hm.tools_dir / "PortMaster" / "themes" / folder
+    theme_dir = hm.tools_dir / "Volkyport" / "themes" / folder
     theme_dir.mkdir(parents=True, exist_ok=True)
     if text is None:
         text = json.dumps(data if data is not None else {"#info": {"name": name or folder, "creator": "me", "description": "A theme."}})
@@ -142,7 +142,7 @@ def test_broken_theme_is_left_out_of_the_list(engine, hm, text, log_errors):
 
 @pytest.mark.parametrize("make", [
     lambda hm: None,
-    lambda hm: (hm.tools_dir / "PortMaster" / "themes" / "chosen").mkdir(parents=True),
+    lambda hm: (hm.tools_dir / "Volkyport" / "themes" / "chosen").mkdir(parents=True),
     lambda hm: add_theme(hm, "chosen", text='{"broken'),
     ])
 def test_current_theme_falls_back(engine, hm, make, log_errors):
@@ -210,7 +210,7 @@ def loading(theme, engine, hm, monkeypatch):
 
 
 def test_theme_that_fails_to_load_falls_back(loading, hm, log_errors):
-    ## It stopped PortMaster from starting until the theme was deleted by hand.
+    ## It stopped Volkyport from starting until the theme was deleted by hand.
     hm.cfg_data['theme'] = "Typo"
 
     assert loading.gui_init() == {"loaded": "default_theme"}

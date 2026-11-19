@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 #
 # fifo_control install / check_runtime, called directly on a headless GUI. This is
-# what PortMaster.sh's autoinstall uses through PortMasterDialog.txt, which waits
+# what Volkyport.sh's autoinstall uses through VolkyportDialog.txt, which waits
 # (for up to 30 minutes) until the done file stops saying WAIT.
 
 import pytest
@@ -138,7 +138,7 @@ def test_check_runtime_error_always_answers(fifo, press_a, monkeypatch):
 def frontend(fifo, monkeypatch):
     monkeypatch.setattr(harbourmaster, "HM_TESTING", False)
     monkeypatch.setattr(fifo.gui.hm.platform, "ES_NAME", "emulationstation")
-    return fifo.gui.hm.tools_dir / "PortMaster" / ".emulationstation-refresh"
+    return fifo.gui.hm.tools_dir / "Volkyport" / ".emulationstation-refresh"
 
 
 def test_install_asks_for_a_frontend_refresh(fifo, frontend, tmp_path):

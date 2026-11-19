@@ -54,7 +54,7 @@ def main(pugwash, monkeypatch, tmp_path):
 
     FakeGUI.made = []
     tools = tmp_path / "tools"
-    (tools / "PortMaster").mkdir(parents=True)
+    (tools / "Volkyport").mkdir(parents=True)
 
     hms = []
 
@@ -65,10 +65,10 @@ def main(pugwash, monkeypatch, tmp_path):
         return hm
 
     removed, added = [], []
-    monkeypatch.setattr(main, "PortMasterGUI", FakeGUI)
+    monkeypatch.setattr(main, "VolkyportGUI", FakeGUI)
     monkeypatch.setattr(main, "HarbourMaster", make_hm)
     monkeypatch.setattr(main, "get_ip_address", lambda: "192.168.0.2")
-    monkeypatch.setattr(main, "portmaster_check_update", lambda pm, config, temp_dir: False)
+    monkeypatch.setattr(main, "volkyport_check_update", lambda pm, config, temp_dir: False)
     monkeypatch.setattr(main.logger, "remove", lambda handler=None: removed.append(handler))
     monkeypatch.setattr(main.logger, "add", lambda *args, **kwargs: added.append(args[0]) or len(added) + 100)
     monkeypatch.setattr(main.console, "do_color", lambda mode=None: main.COLOURS.append(mode))
@@ -119,7 +119,7 @@ def test_double_dash(main):
 
 
 def test_debug_flag_file(main):
-    (main.tools / "PortMaster" / "debug_all_the_things_flag").write_text("")
+    (main.tools / "Volkyport" / "debug_all_the_things_flag").write_text("")
     run(main)
 
     assert main.hms[-1].config['debug'] is True
@@ -162,7 +162,7 @@ def test_fifo_control_without_harbourmaster(main):
 
 
 def test_reboot_file_skips_the_gui(main):
-    (main.tools / "PortMaster" / ".pugwash-reboot").write_text("")
+    (main.tools / "Volkyport" / ".pugwash-reboot").write_text("")
     run(main)
     assert FakeGUI.made[-1].calls == ['quit']
 
@@ -174,7 +174,7 @@ def on_device(main, monkeypatch):
 
 
 def test_update_installed_quits(on_device, monkeypatch):
-    monkeypatch.setattr(on_device, "portmaster_check_update", lambda pm, config, temp_dir: True)
+    monkeypatch.setattr(on_device, "volkyport_check_update", lambda pm, config, temp_dir: True)
 
     assert run(on_device) == 0
     assert FakeGUI.made[-1].calls == ['quit']
@@ -185,7 +185,7 @@ def test_no_check_skips_the_update_check(on_device, monkeypatch):
     def fail(*args):
         raise AssertionError("checked")
 
-    monkeypatch.setattr(on_device, "portmaster_check_update", fail)
+    monkeypatch.setattr(on_device, "volkyport_check_update", fail)
     run(on_device, "--no-check")
 
 

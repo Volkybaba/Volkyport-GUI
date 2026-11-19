@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+#
+# SPDX-License-Identifier: MIT
+#
+
+## -- BEGIN VOLKYPORT INFO --
+VOLKYPORT_VERSION = '2023-01-07-1007'
+VOLKYPORT_RELEASE_CHANNEL = 'developer'
+## -- END VOLKYPORT INFO --
+
+VOLKYPORT_MIN_VERSION = '2025-02-17-0000'
+VOLKYPORT_RELEASE_URL = 'https://github.com/Volkybaba/PortMaster-GUI/releases/latest/download/'
+VOLKYPORT_RELEASE_VALUES = ('stable', 'beta', 'alpha')
+
+VOLKYPORT_UPDATE_FREQUENCY = (60 * 60 * 1)
+VOLKYPORT_DEBUG = False  ## This adds a lot of extra info
+
+import hashlib
+import shutil
+import sys
+import tarfile
+import zipfile
+from pathlib import Path
+
+################################################################################
+## Insert our extra modules.
+PYLIB_PATH    = Path(__file__).parent / 'pylibs'
+EXLIB_PATH    = Path(__file__).parent / 'exlibs'
+PYLIB_ZIP     = Path(__file__).parent / 'pylibs.zip'
+PYLIB_ZIP_MD5 = Path(__file__).parent / 'pylibs.zip.md5'
+
+if not (Path(__file__).parent / '.git').is_dir() and not (Path(__file__).parent / '..' / '.git').is_dir():
+    if PYLIB_ZIP.is_file():
+        if PYLIB_PATH.is_dir():
+            print("- removing old pylibs.")
+            shutil.rmtree(PYLIB_PATH)
+
+        if EXLIB_PATH.is_dir():
+            print("- removing old exlibs.")
+            shutil.rmtree(EXLIB_PATH)
+
+        print("- extracting new pylibs.")
+        with zipfile.ZipFile(PYLIB_ZIP, 'r') as zf:
+            zf.extractall(Path(__file__).parent)
+
+        md5_check = hashlib.md5()
+        with PYLIB_ZIP.open('rb') as fh:
+            while True:
+                data = fh.read(1024 * 1024)
+                if len(data) == 0:
+                    break
+
+                md5_check.update(data)
+
+        with PYLIB_ZIP_MD5.open('wt') as fh:
+            fh.write(md5_check.hexdigest())
+
+        print("- recorded pylibs.zip.md5")
+
+        del md5_check
+
+        print("- removing pylibs.zip")
+        PYLIB_ZIP.unlink()
+
+
+if not (PYLIB_PATH / 'resources' / 'NotoSansTC-Regular.ttf').is_file():
+    ## Extract Noto fonts (Chinese, Japanese, Korean). Without them Volkyport still runs.
+    try:
+        with tarfile.open(str(PYLIB_PATH / 'resources' / 'NotoSans.tar.xz'), 'r:xz') as tar:
+            # Extract all contents into the specified directory
+            tar.extractall(str(PYLIB_PATH / 'resources'))
+
+    except (OSError, EOFError, tarfile.TarError) as err:
+        print(f"- unable to extract the Noto fonts: {err}")
+
+
+sys.path.insert(0, str(EXLIB_PATH))
+sys.path.insert(0, str(PYLIB_PATH))
+
+
+################################################################################
+## Now load the GUI
+import pugwash
+
+pugwash.set_version_info(
+    VOLKYPORT_VERSION=VOLKYPORT_VERSION,
+    VOLKYPORT_RELEASE_CHANNEL=VOLKYPORT_RELEASE_CHANNEL,
+    VOLKYPORT_MIN_VERSION=VOLKYPORT_MIN_VERSION,
+    VOLKYPORT_RELEASE_URL=VOLKYPORT_RELEASE_URL,
+    VOLKYPORT_RELEASE_VALUES=VOLKYPORT_RELEASE_VALUES,
+    VOLKYPORT_UPDATE_FREQUENCY=VOLKYPORT_UPDATE_FREQUENCY,
+    VOLKYPORT_DEBUG=VOLKYPORT_DEBUG,
+    )
+
+from pugwash.main import main  # noqa: E402
+
+
+if __name__ == '__main__':
+    exit(main(sys.argv))

@@ -122,7 +122,7 @@ def test_bad_last_checked_updates_the_source(make_hm, hm_dirs, monkeypatch):
     monkeypatch.setattr(util_net, "fetch_json", lambda url: fetched.append(url))
     monkeypatch.setattr(hm_info, "fetch_text", lambda url: '{"tree": []}')
 
-    source_file = hm_dirs['tools_dir'] / "PortMaster" / "config" / "020_portmaster.source.json"
+    source_file = hm_dirs['tools_dir'] / "Volkyport" / "config" / "020_volkyport.source.json"
     make_hm()
     data = json.loads(source_file.read_text())
     data['last_checked'] = "yesterday"
@@ -173,17 +173,17 @@ def test_signature_path_types(tmp_path):
 
 def test_signature_replaced_not_duplicated(tmp_path):
     script = tmp_path / "x.sh"
-    script.write_text("#!/bin/bash\n# PORTMASTER: old.zip, x.sh\necho\n")
+    script.write_text("#!/bin/bash\n# VOLKYPORT: old.zip, x.sh\necho\n")
 
     util.add_pm_signature(script, ["new.zip", "x.sh"])
 
-    assert script.read_text().count("PORTMASTER:") == 1
+    assert script.read_text().count("VOLKYPORT:") == 1
     assert util.load_pm_signature(script) == ["new.zip", "x.sh"]
 
 
 def test_signature_unchanged_isnt_rewritten(tmp_path):
     script = tmp_path / "x.sh"
-    script.write_text("#!/bin/bash\n# PORTMASTER: x.zip, x.sh\necho\n")
+    script.write_text("#!/bin/bash\n# VOLKYPORT: x.zip, x.sh\necho\n")
     before = script.stat().st_mtime_ns
 
     util.add_pm_signature(script, ["x.zip", "x.sh"])
@@ -192,7 +192,7 @@ def test_signature_unchanged_isnt_rewritten(tmp_path):
 
 def test_signature_needs_a_comma(tmp_path):
     script = tmp_path / "x.sh"
-    script.write_text("#!/bin/bash\n# PORTMASTER: nothing here\n")
+    script.write_text("#!/bin/bash\n# VOLKYPORT: nothing here\n")
     assert util.load_pm_signature(script) is None
 
 
@@ -203,14 +203,14 @@ def test_signature_missing_and_non_scripts(tmp_path):
     assert not (tmp_path / "missing.sh").exists()
 
     text = tmp_path / "x.txt"
-    text.write_text("# PORTMASTER: a, b\n")
+    text.write_text("# VOLKYPORT: a, b\n")
     util.remove_pm_signature(text)
-    assert text.read_text() == "# PORTMASTER: a, b\n"
+    assert text.read_text() == "# VOLKYPORT: a, b\n"
 
 
 def test_remove_signature(tmp_path):
     script = tmp_path / "x.sh"
-    script.write_text("#!/bin/bash\n# PORTMASTER: x.zip, x.sh\necho\n")
+    script.write_text("#!/bin/bash\n# VOLKYPORT: x.zip, x.sh\necho\n")
 
     util.remove_pm_signature(str(script))
     assert script.read_text() == "#!/bin/bash\necho\n"
@@ -316,7 +316,7 @@ def test_get_path_fs_without_df(tmp_path, monkeypatch, error):
 
 
 def test_get_path_fs_runs_df_in_the_c_locale(tmp_path, monkeypatch):
-    ## PortMaster sets LANG to the user's language; df's header in a legacy codeset
+    ## Volkyport sets LANG to the user's language; df's header in a legacy codeset
     ## (ru_RU is ISO-8859-5 on dArkOS: "Файловая система" starts with 0xC4) failed every install.
     monkeypatch.setattr(util_files, "HM_TESTING", False)
     monkeypatch.setenv("LANG", "ru_RU")

@@ -80,7 +80,7 @@ def test_missing_theme(pugtheme, tmp_path):
 ## ThemeDownloader: the list of downloadable themes from the PortMaster-Themes release.
 THEMES_JSON = {
     "themes": {
-        "default_theme": {"name": "Default", "creator": "PortMaster", "file": "default_theme.theme.zip",
+        "default_theme": {"name": "Default", "creator": "Volkyport", "file": "default_theme.theme.zip",
                           "md5": "0" * 32, "image": None},
         "zelda": {"name": "Zelda", "creator": "someone", "description": "LTTP", "file": "Zelda.theme.zip",
                   "md5": "1" * 32, "image": "zelda.png"},
@@ -183,7 +183,7 @@ def test_theme_image_with_capitals(downloader, theme_release, monkeypatch):
 
 
 def test_font_scale_auto_is_a_theme_capability():
-    ## Themes for older PortMasters too put "auto" under it; the device's info doesn't have it.
+    ## Themes for older Volkyports too put "auto" under it; the device's info doesn't have it.
     import harbourmaster
     from pugwash import theme
     target = {}

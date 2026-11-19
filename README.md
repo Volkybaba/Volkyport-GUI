@@ -1,6 +1,6 @@
-# PortMaster - GUI
+# Volkyport - GUI
 
-PortMaster is a convenient script designed to facilitate the downloading and installation of ports for handheld devices. As the number of available ports has increased, the original interface has become progressively cumbersome. For the past few months we have been developing a new GUI.
+Volkyport is a convenient script designed to facilitate the downloading and installation of ports for handheld devices. As the number of available ports has increased, the original interface has become progressively cumbersome. For the past few months we have been developing a new GUI.
 
 # Features (it has them)
 
@@ -9,7 +9,7 @@ PortMaster is a convenient script designed to facilitate the downloading and ins
 - Port previews, we can really showcase the ports.
 - Cancellable downloads, accidentally started a 300mb download? Get out of here.
 - Filter ports by genre/porter/runtime
-- Localizations (We currently have English, Chinese, French, German, Italian, Japanese, Korean, Polish, Portuguese, and Spanish), translators welcome! [![Crowdin](https://badges.crowdin.net/portmaster/localized.svg)](https://crowdin.com/project/portmaster)
+- Localizations (We currently have English, Chinese, French, German, Italian, Japanese, Korean, Polish, Portuguese, and Spanish), translators welcome! [![Crowdin](https://badges.crowdin.net/volkyport/localized.svg)](https://crowdin.com/project/volkyport)
 - **Themes:**
   - Since it was possible with the custom GUI, we went for it.
   - We have a few themes at launch, but contributions are more than welcome.
@@ -23,24 +23,24 @@ PortMaster is a convenient script designed to facilitate the downloading and ins
 # Nerdy features
 
 - **Custom Sources**: want to control your own ports repository? no worries!
-- **Platform Hooks**: PortMaster on raspberry pi? Lets gooooo.
+- **Platform Hooks**: Volkyport on raspberry pi? Lets gooooo.
 
 # Installation
 
-[Install](https://portmaster.games/installation.html)
+[Install](https://volkyport.games/installation.html)
 
 # Translations
 
-If you would like to help out with translations please see our [crowdin page](https://crowdin.com/project/portmaster).
+If you would like to help out with translations please see our [crowdin page](https://crowdin.com/project/volkyport).
 
 # Feedback
 
-Please direct all feedback to the [PortMaster Public Beta](https://discord.com/channels/1122861252088172575/1144846802701520997) channel in the [PortMaster discord server](https://discord.gg/SbVcUM4qFp).
+Please direct all feedback to the [Volkyport Public Beta](https://discord.com/channels/1122861252088172575/1144846802701520997) channel in the [Volkyport discord server](https://discord.gg/SbVcUM4qFp).
 
 
 # Thanks
 
-I want to thank everyone on the PortMaster crew who have helped, but a special thanks to:
+I want to thank everyone on the Volkyport crew who have helped, but a special thanks to:
 
 - [christianhaitian](https://github.com/christianhaitian)
 - [cebion](https://github.com/cebion)
@@ -65,7 +65,7 @@ I want to thank everyone on the PortMaster crew who have helped, but a special t
 - [urllib3][urllib3]
 
 
-[PortMaster]: https://github.com/christianhaitian/PortMaster
+[Volkyport]: https://github.com/Volkybaba/PortMaster-GUI
 [GitHubRepoV1]: https://github.com/kloptops/harbourmaster/tree/main/tools
 
 [example_json]: https://github.com/kloptops/harbourmaster/blob/main/data/example.port.json

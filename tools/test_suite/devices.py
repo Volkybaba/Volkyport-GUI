@@ -8,7 +8,7 @@
 #   python3 -I tools/test_suite/devices.py --refresh    # update data/device_info.json
 #
 # data/device_info.json is PortMaster-Info's device list (what device-a-roo shows): the
-# devices and CFWs PortMaster supports, for the grid's untested-but-supported cells.
+# devices and CFWs Volkyport supports, for the grid's untested-but-supported cells.
 # Standard library only, Python 3.7.
 
 import argparse

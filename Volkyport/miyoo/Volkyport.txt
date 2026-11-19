@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# SPDX-License-Identifier: MIT
+#
+# Launches Volkyport: everything else lives in $controlfolder/utils/vp_launch.txt
+# and miyoo/launch_hooks.txt.
+
+if [ -d "/mnt/sdcard/spruce" ]; then
+  controlfolder="/mnt/sdcard/Roms/.volkyport/Volkyport"
+else
+  controlfolder="/mnt/sdcard/MIYOO_EX/Volkyport"
+fi
+
+source "$controlfolder/utils/vp_launch.txt" miyoo; exit $?

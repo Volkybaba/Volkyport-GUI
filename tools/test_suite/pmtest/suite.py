@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: MIT
 #
-# The PortMaster Test Suite: installs the PortMaster build it ships with, runs every
+# The Volkyport Test Suite: installs the Volkyport build it ships with, runs every
 # test there is on this device, shows a summary and writes a report zip for the devs.
 #
-# Run by "PortMaster Test Suite.sh" with the device's python (3.7+). Standard library
+# Run by "Volkyport Test Suite.sh" with the device's python (3.7+). Standard library
 # only; pytest comes from site/, the code under test from tree/.
 #
 #   suite.py [--no-ui] [--skip install,pytest,gui,smoke,interactive] [--controlfolder DIR]
@@ -35,9 +35,9 @@ from fifo import Dialog  # noqa: E402
 HERE = Path(__file__).resolve().parent
 TREE = HERE / "tree"
 SITE = HERE / "site"
-PM_ZIP = HERE / "PortMaster.zip"
+PM_ZIP = HERE / "Volkyport.zip"
 REPORTS = HERE / "reports"
-## PortMaster's own logs: the tester's are set aside during a run, so a report holds only the run's.
+## Volkyport's own logs: the tester's are set aside during a run, so a report holds only the run's.
 PM_LOGS = ("pugwash.txt", "harbourmaster.txt", "log.txt")
 SAVED_LOGS = HERE / "saved-logs"
 ## Every file the build put in tree/ and site/: installing over an older suite keeps its files.
@@ -220,11 +220,11 @@ def upload_url(path=UPLOAD_FILE):
 
 
 def ssl_context():
-    """PortMaster's own certifi bundle: some CFWs ship old or no CA certificates."""
+    """Volkyport's own certifi bundle: some CFWs ship old or no CA certificates."""
     ## The suite's copy of the code, or the checkout's (tools/test_suite/pmtest).
     roots = [TREE] + ([HERE.parents[2]] if len(HERE.parents) > 2 else [])
     for root in roots:
-        cafile = root / "PortMaster" / "exlibs" / "certifi" / "cacert.pem"
+        cafile = root / "Volkyport" / "exlibs" / "certifi" / "cacert.pem"
         if cafile.is_file():
             return ssl.create_default_context(cafile=str(cafile))
 
@@ -239,7 +239,7 @@ def send_report(url, zip_path, timeout=60):
     zip_path = Path(zip_path)
     request = urllib.request.Request(
         url, data=zip_path.read_bytes(), method="POST",
-        headers={'Content-Type': "application/zip", 'X-Report-Name': zip_path.name, 'User-Agent': "PortMaster-Test-Suite"})
+        headers={'Content-Type': "application/zip", 'X-Report-Name': zip_path.name, 'User-Agent': "Volkyport-Test-Suite"})
     try:
         context = ssl_context() if url.lower().startswith("https:") else None
         with urllib.request.urlopen(request, timeout=timeout, context=context) as response:
@@ -255,7 +255,7 @@ def send_report(url, zip_path, timeout=60):
 def restore_logs(controlfolder, saved=None, keep_new=False):
     """
     Puts the tester's logs back from saved/ (SAVED_LOGS). keep_new: add what was logged
-    since to the end (a run that crashed, then PortMaster was used) instead of dropping it.
+    since to the end (a run that crashed, then Volkyport was used) instead of dropping it.
     """
     saved = Path(saved or SAVED_LOGS)
     for name in PM_LOGS:
@@ -274,7 +274,7 @@ def restore_logs(controlfolder, saved=None, keep_new=False):
 
 
 def set_aside_logs(controlfolder, saved=None):
-    """Moves the tester's logs to saved/ (SAVED_LOGS); PortMaster starts new ones for the run."""
+    """Moves the tester's logs to saved/ (SAVED_LOGS); Volkyport starts new ones for the run."""
     saved = Path(saved or SAVED_LOGS)
     if saved.is_dir():
         ## Left by a run that didn't finish.
@@ -304,13 +304,13 @@ def mark_report(report, state):
 
 
 def report_version(report):
-    """The PortMaster version a report tested, or None."""
+    """The Volkyport version a report tested, or None."""
     try:
         with zipfile.ZipFile(str(report)) as zf:
             if zf.getinfo("summary.json").file_size > 1024 * 1024:
                 return None
 
-            return json.loads(zf.read("summary.json").decode("utf-8")).get('info', {}).get('portmaster')
+            return json.loads(zf.read("summary.json").decode("utf-8")).get('info', {}).get('volkyport')
 
     except Exception:
         return None
@@ -328,7 +328,7 @@ def upload_question(pending):
     """What to ask about reports from earlier runs that weren't uploaded."""
     if len(pending) == 1:
         report, version, kept = pending[0]
-        what = f"PortMaster {version}" if version else "the Test Suite"
+        what = f"Volkyport {version}" if version else "the Test Suite"
         why = "chose not to upload it" if kept else "the report couldn't be uploaded"
         return f"I see you've already run {what} and {why}.\n\nWould you like to upload it now?"
 
@@ -364,15 +364,15 @@ def summary_entries(sections, report_name, sent=None):
         entries.append((section.key, f"{LABELS[section.status]}: {section.name}", description))
 
     entries.append(("#report", "Report", (
-        f"Saved as:\n{report_name}\n\nIn the PortMaster Test Suite's reports folder (ports/pmtest/reports). "
+        f"Saved as:\n{report_name}\n\nIn the Volkyport Test Suite's reports folder (ports/pmtest/reports). "
         "Addresses, serial numbers and network names have been taken out, so it's safe to share." +
         ("" if sent is None else "\n\nUploaded." if sent[0] else f"\n\nCouldn't upload it ({sent[1]}), please send it by hand."))))
     return entries
 
 
 def summary_text(sections, info):
-    lines = ["PortMaster Test Suite", "=" * 21, ""]
-    for key in ("portmaster", "cfw", "device", "python", "started"):
+    lines = ["Volkyport Test Suite", "=" * 21, ""]
+    for key in ("volkyport", "cfw", "device", "python", "started"):
         if key in info:
             lines.append(f"{key:<11}: {info[key]}")
 
@@ -599,19 +599,19 @@ def os_release_name(path):
 
 
 def launcher_hooks(controlfolder):
-    """The hooks folder the installed launcher stub passes to pm_launch.txt (muos, spruce, ...), "" for none."""
-    for stub in (Path(controlfolder) / "PortMaster.sh", Path(controlfolder).parent / "launch.sh"):
+    """The hooks folder the installed launcher stub passes to vp_launch.txt (muos, spruce, ...), "" for none."""
+    for stub in (Path(controlfolder) / "Volkyport.sh", Path(controlfolder).parent / "launch.sh"):
         try:
             text = stub.read_text(errors="replace")
 
         except OSError:
             continue
 
-        match = re.search(r'pm_launch\.txt"?[ \t]+([a-z]+)', text)
+        match = re.search(r'vp_launch\.txt"?[ \t]+([a-z]+)', text)
         if match:
             return match.group(1)
 
-        if "pm_launch.txt" in text:
+        if "vp_launch.txt" in text:
             return ""
 
     return ""
@@ -623,8 +623,8 @@ DEVICE_INFO_VARS = ("CFW_", "DEVICE_", "DISPLAY_", "ASPECT_", "ANALOG_", "GPU_")
 
 def fresh_launch_env(environ):
     """
-    environ as the frontend gives it to PortMaster.sh, without what the suite's port
-    script got from the old PortMaster's device_info.txt. On ROCKNIX, whose control.txt
+    environ as the frontend gives it to Volkyport.sh, without what the suite's port
+    script got from the old Volkyport's device_info.txt. On ROCKNIX, whose control.txt
     sets no CFW_NAME, an inherited CFW_NAME sends the launcher to mod_ROCKNIX.txt
     instead of mod_.txt, which is what runs device_info.txt there.
     """
@@ -635,12 +635,12 @@ def fresh_launch_env(environ):
 
 def launcher_env(controlfolder, python=None, timeout=60):
     """
-    The environment PortMaster's launcher runs pugwash in (pm_launch.txt with
-    PM_LAUNCH_ENV_ONLY=Y), eg: which SDL2 it loads. None if that PortMaster can't say.
+    The environment Volkyport's launcher runs pugwash in (vp_launch.txt with
+    PM_LAUNCH_ENV_ONLY=Y), eg: which SDL2 it loads. None if that Volkyport can't say.
     """
     controlfolder = Path(controlfolder)
     try:
-        if "PM_LAUNCH_ENV_ONLY" not in (controlfolder / "utils" / "pm_launch.txt").read_text(errors="replace"):
+        if "PM_LAUNCH_ENV_ONLY" not in (controlfolder / "utils" / "vp_launch.txt").read_text(errors="replace"):
             return None
 
     except OSError:
@@ -655,7 +655,7 @@ def launcher_env(controlfolder, python=None, timeout=60):
         dump = Path(temp_dir) / "env.json"
         script = (
             'controlfolder="$1"; cd "$controlfolder" || exit 1\n'
-            'source "$controlfolder/utils/pm_launch.txt" "$2" > /dev/null 2>&1 < /dev/null\n'
+            'source "$controlfolder/utils/vp_launch.txt" "$2" > /dev/null 2>&1 < /dev/null\n'
             '"$3" -c "import json, os, sys; json.dump(dict(os.environ), open(sys.argv[1], \'w\'))" "$4"\n')
         try:
             subprocess.run(
@@ -677,7 +677,7 @@ class Suite:
     def __init__(self, options):
         self.options = options
         self.started = datetime.datetime.now()
-        self.controlfolder = Path(options.controlfolder or os.environ.get("controlfolder", "/roms/ports/PortMaster"))
+        self.controlfolder = Path(options.controlfolder or os.environ.get("controlfolder", "/roms/ports/Volkyport"))
         self.work = pick_work_dir([Path(tempfile.gettempdir()) / "pmtest", HERE / "work"])
         if self.work.exists():
             shutil.rmtree(str(self.work), ignore_errors=True)
@@ -686,7 +686,7 @@ class Suite:
         self.log_file = self.work / "run.log"
         self.info = {'started': self.started.isoformat(timespec='seconds')}
         self.sections = [Section(key, name) for key, name in (
-            ("install", "Install PortMaster"),
+            ("install", "Install Volkyport"),
             ("device", "Device information"),
             ("pytest", "Test suite"),
             ("gui", "GUI tests"),
@@ -754,7 +754,7 @@ class Suite:
         self.has_ui = False
 
     def use_launcher_env(self):
-        """pugwash and the tests run in the launcher's environment, once the installed PortMaster can tell it."""
+        """pugwash and the tests run in the launcher's environment, once the installed Volkyport can tell it."""
         env = launcher_env(self.controlfolder)
         if env is None:
             self.log("launcher environment: not available, using the port's")
@@ -774,9 +774,9 @@ class Suite:
 
     ## Steps.
     def step_install(self, section):
-        version = zipfile.ZipFile(str(PM_ZIP)).read("PortMaster/version").decode().strip()
-        self.info['portmaster'] = version
-        self.say(f"Installing PortMaster {version}, this takes a minute.")
+        version = zipfile.ZipFile(str(PM_ZIP)).read("Volkyport/version").decode().strip()
+        self.info['volkyport'] = version
+        self.say(f"Installing Volkyport {version}, this takes a minute.")
 
         installed = self.ui.install(PM_ZIP) if self.has_ui else None
         if installed is not None:
@@ -788,17 +788,17 @@ class Suite:
                 timeout=1800, cwd=self.controlfolder, output=self.work / "install" / "harbourmaster.txt")
             installed = code == 0
 
-        ## The new PortMaster's pugwash from here on (its first run does the post-install step).
+        ## The new Volkyport's pugwash from here on (its first run does the post-install step).
         self.ui_stop()
         self.use_launcher_env()
         self.ui_start()
 
         now = (self.controlfolder / "version").read_text().strip() if (self.controlfolder / "version").is_file() else "?"
         if installed and now == version:
-            section.set(PASS, f"PortMaster {version} installed")
+            section.set(PASS, f"Volkyport {version} installed")
         else:
-            section.set(FAIL, f"PortMaster {version} did not install (now {now})",
-                        f"pugwash answered {self.ui.last_answer!r}. See install/ and the PortMaster logs in the report.")
+            section.set(FAIL, f"Volkyport {version} did not install (now {now})",
+                        f"pugwash answered {self.ui.last_answer!r}. See install/ and the Volkyport logs in the report.")
 
     def step_device(self, section):
         out = self.work / "device"
@@ -806,7 +806,7 @@ class Suite:
 
         self.info['python'] = platform.python_version()
         self.info['uname'] = " ".join(platform.uname())
-        ## From the launcher's environment once the new PortMaster is in: the port started
+        ## From the launcher's environment once the new Volkyport is in: the port started
         ## with the old one's device_info.txt.
         env = self.base_env or os.environ
         self.info['cfw'] = env.get("CFW_NAME", "unknown")
@@ -831,11 +831,11 @@ class Suite:
                 ("df", ["df", "-h"]),
                 ("meminfo", ["cat", "/proc/meminfo"]),
                 ("dmesg", ["sh", "-c", "dmesg | tail -n 300"]),
-                ("launcher", ["sh", "-c", f"ls -la '{self.controlfolder}/..' '{self.controlfolder}/utils'; tail -n 3 '{self.controlfolder}/PortMaster.sh' 2>/dev/null"]),
+                ("launcher", ["sh", "-c", f"ls -la '{self.controlfolder}/..' '{self.controlfolder}/utils'; tail -n 3 '{self.controlfolder}/Volkyport.sh' 2>/dev/null"]),
                 ):
             self.run(command, timeout=30, output=out / f"{name}.txt")
 
-        ## What PortMaster itself makes of this device (the dict pugwash logs at startup).
+        ## What Volkyport itself makes of this device (the dict pugwash logs at startup).
         probe = (
             "import json, sys\n"
             f"sys.path[:0] = [{str(self.controlfolder / 'pylibs')!r}, {str(self.controlfolder / 'exlibs')!r}]\n"
@@ -853,7 +853,7 @@ class Suite:
             "print('DRIVERS', ' '.join(sdl2.SDL_GetVideoDriver(i).decode() for i in range(sdl2.SDL_GetNumVideoDrivers())))\n")
         code, text = self.run(
             [sys.executable, "-c", probe], timeout=60,
-            env=self.test_env(PYTHONPATH=str(TREE / "PortMaster" / "exlibs")), output=out / "sdl.txt")
+            env=self.test_env(PYTHONPATH=str(TREE / "Volkyport" / "exlibs")), output=out / "sdl.txt")
 
         drivers = []
         for line in text.splitlines():
@@ -976,9 +976,9 @@ class Suite:
         ports = scratch / "ports"
         ports.mkdir(parents=True, exist_ok=True)
 
-        ## The installed PortMaster and its cache, ports into a scratch folder, and the plain
+        ## The installed Volkyport and its cache, ports into a scratch folder, and the plain
         ## platform: CFW hooks (eg: muOS's catalogue) would write outside that folder.
-        ## No --no-check: a PortMaster that has never been opened has no port list yet, so it
+        ## No --no-check: a Volkyport that has never been opened has no port list yet, so it
         ## has to fetch one (AmberELEC MLP1: "Unable to find a source for unlevel.zip").
         env = self.test_env(HM_PORTS_DIR=str(ports), HM_SCRIPTS_DIR=str(ports), CFW_NAME="default")
         harbourmaster = [sys.executable, self.controlfolder / "harbourmaster", "--no-colour"]
@@ -1051,13 +1051,13 @@ class Suite:
                 env["SDL_GAMECONTROLLERCONFIG"] = os.environ["sdl_controllerconfig"]
 
             code, text = self.run(
-                [portmsg, "--type", "info", "--timeout", "4", "--title", "PortMaster Test Suite",
+                [portmsg, "--type", "info", "--timeout", "4", "--title", "Volkyport Test Suite",
                  "--text", "This message is drawn by portmsg. It closes by itself."],
                 timeout=30, env=env, output=self.work / "interactive" / "portmsg.txt")
             self.ui_start()
 
             seen = self.ui.message_box(
-                "A message with the title \"PortMaster Test Suite\" should have been on the screen for a few seconds.\n\n"
+                "A message with the title \"Volkyport Test Suite\" should have been on the screen for a few seconds.\n\n"
                 "Did you see it?", want_cancel=True, ok_text="Yes", cancel_text="No")
             answers['portmsg'] = seen
             if not seen:
@@ -1105,7 +1105,7 @@ class Suite:
             self.ui.message_box("Uploaded, thanks!" if len(pending) == 1 else f"Uploaded {len(pending)} reports, thanks!")
 
     def main(self):
-        ## The tester's own PortMaster logs stay out of the report, and come back afterwards.
+        ## The tester's own Volkyport logs stay out of the report, and come back afterwards.
         set_aside_logs(self.controlfolder)
         try:
             return self.run_suite()
@@ -1116,20 +1116,20 @@ class Suite:
 
     def run_suite(self):
         skip = set(self.options.skip)
-        self.log(f"PortMaster Test Suite, controlfolder {self.controlfolder}, work {self.work}, python {sys.executable}")
+        self.log(f"Volkyport Test Suite, controlfolder {self.controlfolder}, work {self.work}, python {sys.executable}")
 
         upload = upload_url()
         self.ui_start()
         if self.has_ui and "install" not in skip:
-            version = zipfile.ZipFile(str(PM_ZIP)).read("PortMaster/version").decode().strip()
+            version = zipfile.ZipFile(str(PM_ZIP)).read("Volkyport/version").decode().strip()
             if upload:
                 self.offer_pending_uploads(upload)
 
             if any(report_version(report) == version for report in REPORTS.glob("*.zip") if report.is_file()):
-                intro = (f"PortMaster Test Suite\n\nYou've already run PortMaster {version} on this device. "
+                intro = (f"Volkyport Test Suite\n\nYou've already run Volkyport {version} on this device. "
                          "Would you like to run it again?\n\n")
             else:
-                intro = f"PortMaster Test Suite\n\nThis installs PortMaster {version} and tests it on this device. "
+                intro = f"Volkyport Test Suite\n\nThis installs Volkyport {version} and tests it on this device. "
 
             if not self.ui.message_box(
                     intro + "It takes 5 to 15 minutes, and the screen will flicker during the GUI tests. "
@@ -1173,7 +1173,7 @@ class Suite:
 
         name = report_name(self.info, self.started)
         report = write_report(REPORTS / name, self.work, self.sections, self.info, extra_files=[
-            (self.controlfolder / log, f"portmaster/{log}") for log in PM_LOGS
+            (self.controlfolder / log, f"volkyport/{log}") for log in PM_LOGS
             ], names=private_names(platform.node(), self.info, (self.base_env or os.environ).get("DEVICE_CPU", "")))
         self.log(f"report: {report}")
 
@@ -1227,7 +1227,7 @@ def prune_stale(here=HERE, roots=("tree", "site")):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="PortMaster Test Suite")
+    parser = argparse.ArgumentParser(description="Volkyport Test Suite")
     parser.add_argument("--no-ui", action="store_true", help="don't use the screen (pugwash)")
     parser.add_argument("--skip", default="", help="comma separated steps to skip: " + ",".join(STEPS))
     parser.add_argument("--controlfolder", default=None)

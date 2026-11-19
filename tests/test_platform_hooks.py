@@ -59,12 +59,12 @@ def device(tmp_path, monkeypatch):
 
 @pytest.fixture
 def pm_dir(hm):
-    """PortMaster's own folder with every CFW's control.txt and launcher stub."""
-    pm_dir = hm.tools_dir / "PortMaster"
+    """Volkyport's own folder with every CFW's control.txt and launcher stub."""
+    pm_dir = hm.tools_dir / "Volkyport"
     for cfw in ("muos", "trimui", "miyoo", "spruce", "batocera", "knulli", "retrodeck"):
         (pm_dir / cfw).mkdir(parents=True, exist_ok=True)
         (pm_dir / cfw / "control.txt").write_text(f"# {cfw} control\n")
-        (pm_dir / cfw / "PortMaster.txt").write_text(f"# {cfw} launcher\n")
+        (pm_dir / cfw / "Volkyport.txt").write_text(f"# {cfw} launcher\n")
 
     return pm_dir
 
@@ -160,7 +160,7 @@ def test_base_defaults(hm):
     platform.loaded()
     platform.do_move_ports()
     platform.first_run()
-    platform.portmaster_install([])
+    platform.volkyport_install([])
 
 
 def test_base_gamelist_add_missing_gameinfo(hm, tmp_path):
@@ -204,7 +204,7 @@ def test_special_gamelist_cancel_still_escapes(hm, error):
 ## GCD modes (ArkOS, AmberELEC, ...)
 @pytest.fixture
 def gcd(hm):
-    backup = hm.tools_dir / "PortMaster" / ".Backup"
+    backup = hm.tools_dir / "Volkyport" / ".Backup"
     backup.mkdir(parents=True)
     (backup / "donottouch.txt").write_text("# Standard Layout\n")
     (backup / "donottouch_x.txt").write_text("# Xbox 360 Layout\n")
@@ -218,7 +218,7 @@ def test_gcd_mode_defaults_to_standard(gcd, hm):
 
 
 def test_gcd_mode_detected_from_the_file(gcd, hm):
-    (hm.tools_dir / "PortMaster" / "gamecontrollerdb.txt").write_text("# Xbox 360 Layout\nstuff\n")
+    (hm.tools_dir / "Volkyport" / "gamecontrollerdb.txt").write_text("# Xbox 360 Layout\nstuff\n")
     assert gcd.get_gcd_mode() == 'xbox'
 
     gcd.loaded()
@@ -231,7 +231,7 @@ def test_gcd_mode_bad_config_value(gcd, hm):
 
 
 def test_set_gcd_mode(gcd, hm):
-    gamecontroller = hm.tools_dir / "PortMaster" / "gamecontrollerdb.txt"
+    gamecontroller = hm.tools_dir / "Volkyport" / "gamecontrollerdb.txt"
 
     gcd.set_gcd_mode('xbox')
     assert gamecontroller.read_text() == "# Xbox 360 Layout\n"
@@ -245,11 +245,11 @@ def test_set_gcd_mode(gcd, hm):
 @pytest.mark.parametrize("mode", [None, "", "rainbow"])
 def test_set_gcd_mode_ignores_bad_modes(gcd, hm, mode):
     gcd.set_gcd_mode(mode)
-    assert not (hm.tools_dir / "PortMaster" / "gamecontrollerdb.txt").exists()
+    assert not (hm.tools_dir / "Volkyport" / "gamecontrollerdb.txt").exists()
 
 
 def test_set_gcd_mode_missing_file(gcd, hm):
-    (hm.tools_dir / "PortMaster" / ".Backup" / "donottouch_x.txt").unlink()
+    (hm.tools_dir / "Volkyport" / ".Backup" / "donottouch_x.txt").unlink()
     gcd.set_gcd_mode('xbox')
     assert 'gcd-mode' not in hm.cfg_data
 
@@ -269,19 +269,19 @@ def test_harbourmaster_gcd_passthrough(hm, gcd):
     ("new pmsplash launcher", "new pmsplash launcher"),
     ])
 def test_arkos_moves_a_misplaced_launcher(hm, good, expected):
-    (hm.ports_dir / "PortMaster.sh").write_text("bad")
+    (hm.ports_dir / "Volkyport.sh").write_text("bad")
     if good is not None:
-        (hm.tools_dir / "PortMaster.sh").write_text(good)
+        (hm.tools_dir / "Volkyport.sh").write_text(good)
 
     arkos.PlatformArkOS(hm)
 
-    assert not (hm.ports_dir / "PortMaster.sh").exists()
-    assert (hm.tools_dir / "PortMaster.sh").read_text() == expected
+    assert not (hm.ports_dir / "Volkyport.sh").exists()
+    assert (hm.tools_dir / "Volkyport.sh").read_text() == expected
 
 
 def test_arkos_nothing_to_move(hm):
     arkos.PlatformArkOS(hm)
-    assert not (hm.tools_dir / "PortMaster.sh").exists()
+    assert not (hm.tools_dir / "Volkyport.sh").exists()
     assert arkos.PlatformArkOS(hm).gamelist_file() == hm.ports_dir / "gamelist.xml"
 
 
@@ -293,17 +293,17 @@ def test_emuelec_gamelists(hm):
 
 ################################################################################
 ## muOS
-def test_muos_portmaster_install(hm, device, pm_dir):
+def test_muos_volkyport_install(hm, device, pm_dir):
     bash_files = []
     (pm_dir / "tasksetter").write_text("old")
 
     muos.PlatformmuOS(hm).first_run()
-    muos.PlatformmuOS(hm).portmaster_install(bash_files)
+    muos.PlatformmuOS(hm).volkyport_install(bash_files)
 
     assert (pm_dir / "control.txt").read_text() == "# muos control\n"
-    assert device.path("/roms/ports/PortMaster/control.txt").read_text() == "# muos control\n"
-    assert (pm_dir / "PortMaster.sh").read_text() == "# muos launcher\n"
-    assert bash_files == [pm_dir / "PortMaster.sh"]
+    assert device.path("/roms/ports/Volkyport/control.txt").read_text() == "# muos control\n"
+    assert (pm_dir / "Volkyport.sh").read_text() == "# muos launcher\n"
+    assert bash_files == [pm_dir / "Volkyport.sh"]
     assert (pm_dir / "tasksetter").read_text() == ""
 
 
@@ -470,13 +470,13 @@ def trimui_dirs(device):
     return device
 
 
-def test_trimui_portmaster_install(hm, trimui_dirs, pm_dir):
+def test_trimui_volkyport_install(hm, trimui_dirs, pm_dir):
     bash_files = []
     trimui.PlatformTrimUI(hm).first_run()
-    trimui.PlatformTrimUI(hm).portmaster_install(bash_files)
+    trimui.PlatformTrimUI(hm).volkyport_install(bash_files)
 
     assert (pm_dir / "control.txt").read_text() == "# trimui control\n"
-    assert trimui_dirs.path("/roms/ports/PortMaster/control.txt").is_file()
+    assert trimui_dirs.path("/roms/ports/Volkyport/control.txt").is_file()
     assert (hm.tools_dir / "launch.sh").read_text() == "# trimui launcher\n"
     assert bash_files == [hm.tools_dir / "launch.sh"]
     assert (pm_dir / "tasksetter").is_file()
@@ -529,10 +529,10 @@ def test_trimui_ports_mode(hm, trimui_dirs):
     platform = trimui.PlatformTrimUI(hm)
     platform.add_port_script(script)
 
-    port_dir = trimui_dirs.path("/mnt/SDCARD/Ports/portmaster-test.port")
+    port_dir = trimui_dirs.path("/mnt/SDCARD/Ports/volkyport-test.port")
     config = json.loads((port_dir / "config.json").read_text())
     assert config['label'] == "Test Port"
-    assert config['package'] == "portmaster-test.port"
+    assert config['package'] == "volkyport-test.port"
     assert config['launch'] == str(script).replace(" ", "\\ ")
 
     platform.remove_port_script(script)
@@ -551,7 +551,7 @@ def test_trimui_gamelist_add_ports_mode(hm, trimui_dirs, gameinfo):
     hm.cfg_data['trimui-port-mode'] = 'ports'
     trimui.PlatformTrimUI(hm).gamelist_add(gameinfo)
 
-    port_dir = trimui_dirs.path("/mnt/SDCARD/Ports/portmaster-test.port")
+    port_dir = trimui_dirs.path("/mnt/SDCARD/Ports/volkyport-test.port")
     assert json.loads((port_dir / "config.json").read_text())['label'] == "Test Port"
     assert (port_dir / "icon-pre.png").read_bytes() == b"cover"
 
@@ -566,7 +566,7 @@ def test_trimui_gamelist_add_partial_entries(hm, trimui_dirs, gameinfo):
 
     trimui.PlatformTrimUI(hm).gamelist_add(gameinfo)
 
-    port_dir = trimui_dirs.path("/mnt/SDCARD/Ports/portmaster-test.port")
+    port_dir = trimui_dirs.path("/mnt/SDCARD/Ports/volkyport-test.port")
     ## No name: the script's.
     assert json.loads((port_dir / "config.json").read_text())['label'] == "Test Port"
     assert not (port_dir / "icon-pre.png").exists()
@@ -583,75 +583,75 @@ def test_trimui_do_move_ports(hm, trimui_dirs, gameinfo, mode):
     roms = trimui_dirs.path("/mnt/SDCARD/Roms/PORTS")
     ports = trimui_dirs.path("/mnt/SDCARD/Ports")
     (roms / "Stale.sh").write_text("x")
-    (ports / "portmaster-stale").mkdir()
-    (ports / "portmaster-file").write_text("not a folder")
+    (ports / "volkyport-stale").mkdir()
+    (ports / "volkyport-file").write_text("not a folder")
     (ports / "someone-elses").mkdir()
 
     hm.cfg_data['trimui-port-mode'] = mode
     trimui.PlatformTrimUI(hm).do_move_ports()
 
     assert (ports / "someone-elses").is_dir()
-    assert (ports / "portmaster-file").is_file()
+    assert (ports / "volkyport-file").is_file()
     if mode == "roms":
-        assert not (ports / "portmaster-stale").exists()
+        assert not (ports / "volkyport-stale").exists()
         assert (roms / "Test Port.sh").is_file()
         assert (roms / "Stale.sh").is_file()
     else:
         assert not (roms / "Stale.sh").exists()
-        assert (ports / "portmaster-test.port" / "config.json").is_file()
+        assert (ports / "volkyport-test.port" / "config.json").is_file()
 
 
 ################################################################################
 ## Miyoo and spruce
-def test_miyoo_portmaster_install(hm, device, pm_dir):
+def test_miyoo_volkyport_install(hm, device, pm_dir):
     bash_files = []
     miyoo.PlatformMiyoo(hm).first_run()
-    miyoo.PlatformMiyoo(hm).portmaster_install(bash_files)
+    miyoo.PlatformMiyoo(hm).volkyport_install(bash_files)
 
     assert (pm_dir / "control.txt").read_text() == "# miyoo control\n"
-    assert (pm_dir / "PortMaster.sh").read_text() == "# miyoo launcher\n"
-    assert device.path("/root/.local/share/PortMaster/control.txt").read_text() == "# miyoo control\n"
-    assert bash_files == [pm_dir / "PortMaster.sh"]
+    assert (pm_dir / "Volkyport.sh").read_text() == "# miyoo launcher\n"
+    assert device.path("/root/.local/share/Volkyport/control.txt").read_text() == "# miyoo control\n"
+    assert bash_files == [pm_dir / "Volkyport.sh"]
 
 
 @pytest.mark.parametrize("xdg", [True, False])
-def test_spruce_portmaster_install(hm, device, pm_dir, monkeypatch, tmp_path, xdg):
+def test_spruce_volkyport_install(hm, device, pm_dir, monkeypatch, tmp_path, xdg):
     if xdg:
         monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "xdg"))
-        control = tmp_path / "xdg" / "PortMaster" / "control.txt"
+        control = tmp_path / "xdg" / "Volkyport" / "control.txt"
     else:
         monkeypatch.delenv("XDG_DATA_HOME", raising=False)
-        control = device.path("/home/.local/share/PortMaster/control.txt")
+        control = device.path("/home/.local/share/Volkyport/control.txt")
 
     platform = miyoo.PlatformSpruce(hm)
     platform.first_run()
-    platform.portmaster_post_install()
+    platform.volkyport_post_install()
 
     assert (pm_dir / "control.txt").read_text() == "# spruce control\n"
-    assert (pm_dir / "PortMaster.sh").read_text() == "# spruce launcher\n"
+    assert (pm_dir / "Volkyport.sh").read_text() == "# spruce launcher\n"
     assert control.read_text() == "# spruce control\n"
 
 
 ################################################################################
 ## JELOS / ROCKNIX
-def test_jelos_portmaster_install(hm, device, monkeypatch):
-    system = device.mkdir("/usr/config/PortMaster")
+def test_jelos_volkyport_install(hm, device, monkeypatch):
+    system = device.mkdir("/usr/config/Volkyport")
     for name in ("control.txt", "gamecontrollerdb.txt", "mapper.txt", "oga_controls", "oga_controls_settings.txt"):
         (system / name).write_text(name)
 
     import shutil
     copytree = shutil.copytree
     monkeypatch.setattr(jelos.shutil, "copytree", lambda src, dst: copytree(str(device(src)), str(dst)))
-    (hm.tools_dir / "PortMaster").mkdir(exist_ok=True)
+    (hm.tools_dir / "Volkyport").mkdir(exist_ok=True)
 
     platform = jelos.PlatformROCKNIX(hm)
     platform.first_run()
 
-    pm_dir = hm.tools_dir / "PortMaster"
+    pm_dir = hm.tools_dir / "Volkyport"
     for name in ("control.txt", "gamecontrollerdb.txt", "mapper.txt", "oga_controls", "oga_controls_settings.txt"):
         assert (pm_dir / name).read_text() == name
 
-    assert device.path("/storage/.config/PortMaster/control.txt").is_file()
+    assert device.path("/storage/.config/Volkyport/control.txt").is_file()
     assert platform.gamelist_file() == hm.ports_dir / "gamelist.xml"
     assert platform.ES_NAME == "weston"
 
@@ -701,8 +701,8 @@ def test_batocera_invert_buttons(hm, device, settings, expected):
 
 
 @pytest.mark.parametrize("conf, invert, xbox, swap", [
-    ('ports["PortMaster.sh"].xbox_layout=0\n', None, False, True),
-    ('ports["PortMaster.sh"].xbox_layout=1\n', None, False, False),
+    ('ports["Volkyport.sh"].xbox_layout=0\n', None, False, True),
+    ('ports["Volkyport.sh"].xbox_layout=1\n', None, False, False),
     ('ports.xbox_layout=0\n', None, False, True),
     ('', "true", True, False),
     ('', "false", False, True),
@@ -731,7 +731,7 @@ def test_batocera_first_run(hm, device, pm_dir):
 
 
 def test_batocera_move_launcher_error_is_logged(hm, device, pm_dir, monkeypatch, log_errors):
-    (pm_dir / "PortMaster.sh").write_text("x")
+    (pm_dir / "Volkyport.sh").write_text("x")
 
     def fail(*args, **kwargs):
         raise OSError("read-only")
@@ -760,7 +760,7 @@ def test_retrodeck_json_config_defaults(hm, device):
 
     config = retrodeck.PlatformRetroDECK(hm).get_rdconfig()
     assert config['roms_folder'] == device("/rd/roms")
-    assert config['ports_folder'] == device("/rd/PortMaster")
+    assert config['ports_folder'] == device("/rd/Volkyport")
 
 
 @pytest.mark.parametrize("text", ['[]', '{"paths": {}}', 'garbage'])
@@ -779,7 +779,7 @@ def test_retrodeck_cfg_config(hm, device):
     assert config['rdhome'] == device("/rd")
     assert config['roms_folder'] == device("/r")
     assert config['media_folder'] == device("/m")
-    assert config['ports_folder'] == device("/rd/PortMaster")
+    assert config['ports_folder'] == device("/rd/Volkyport")
 
 
 def test_retrodeck_cfg_without_rdhome(hm, device, log_errors):
@@ -802,24 +802,24 @@ def test_retrodeck_gamelist_file(hm, device, tmp_path):
     write_rd_json(device, {"rd_home_path": str(tmp_path / "rd")})
 
     gamelist = retrodeck.PlatformRetroDECK(hm).gamelist_file()
-    assert gamelist == tmp_path / "rd" / "ES-DE" / "gamelists" / "portmaster" / "gamelist.xml"
+    assert gamelist == tmp_path / "rd" / "ES-DE" / "gamelists" / "volkyport" / "gamelist.xml"
     assert gamelist.parent.is_dir()
 
 
-def test_retrodeck_portmaster_install(hm, device, pm_dir, tmp_path):
+def test_retrodeck_volkyport_install(hm, device, pm_dir, tmp_path):
     scripts = hm.scripts_dir
-    (scripts / "PortMaster.sh").symlink_to(tmp_path / "nowhere")
+    (scripts / "Volkyport.sh").symlink_to(tmp_path / "nowhere")
     bash_files = []
 
     platform = retrodeck.PlatformRetroDECK(hm)
     platform.first_run()
-    platform.portmaster_install(bash_files)
+    platform.volkyport_install(bash_files)
 
     assert (pm_dir / "control.txt").read_text() == "# retrodeck control\n"
-    assert (pm_dir / "PortMaster.sh").read_text() == "# retrodeck launcher\n"
-    assert not (scripts / "PortMaster.sh").is_symlink()
-    assert (scripts / "PortMaster.sh").read_text() == "# retrodeck launcher\n"
-    assert bash_files == [scripts / "PortMaster.sh"]
+    assert (pm_dir / "Volkyport.sh").read_text() == "# retrodeck launcher\n"
+    assert not (scripts / "Volkyport.sh").is_symlink()
+    assert (scripts / "Volkyport.sh").read_text() == "# retrodeck launcher\n"
+    assert bash_files == [scripts / "Volkyport.sh"]
 
 
 ################################################################################

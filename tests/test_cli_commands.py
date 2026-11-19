@@ -180,14 +180,14 @@ def test_portsjson_to_file(cli_hm, tmp_path):
 
 
 def test_portsjson_stdout_rewrites_release_urls(cli_hm, capsys):
-    source = cli_hm.sources['pm']
-    source._data['sprout.zip']['url'] = "https://github.com/x/PortMaster-Releases/releases/download/2024-01-02_1234/sprout.zip"
+    source = cli_hm.sources['vp']
+    source._data['sprout.zip']['url'] = "https://github.com/x/Volkyport-Releases/releases/download/2024-01-02_1234/sprout.zip"
 
     cli.do_portsjson(cli_hm, [])
     data = json.loads(capsys.readouterr().out)
 
     sprout = [port for port in data['ports'] if port['name'] == "sprout.zip"][0]
-    assert sprout['download_url'] == "https://github.com/x/PortMaster-Releases/releases/latest/download/sprout.zip"
+    assert sprout['download_url'] == "https://github.com/x/Volkyport-Releases/releases/latest/download/sprout.zip"
 
 
 def test_install_and_uninstall(cli_hm, hm_dirs):
@@ -258,11 +258,11 @@ def test_update_sources(cli_hm, capsys, monkeypatch):
         monkeypatch.setattr(source, "update", lambda prefix=prefix: updated.append(prefix))
 
     assert cli.do_update(cli_hm, []) == 0
-    assert sorted(updated) == ['pm', 'pmmv']
+    assert sorted(updated) == ['pmmv', 'vp']
 
     updated.clear()
     assert cli.do_update(cli_hm, ["ALL"]) == 0
-    assert sorted(updated) == ['pm', 'pmmv']
+    assert sorted(updated) == ['pmmv', 'vp']
 
     updated.clear()
     assert cli.do_update(cli_hm, ["pmmv", "nope"]) == 0
@@ -276,7 +276,7 @@ def test_auto_update(cli_hm, monkeypatch):
         monkeypatch.setattr(source, "auto_update", lambda prefix=prefix: called.append(prefix))
 
     assert cli.do_auto_update(cli_hm, []) == 0
-    assert sorted(called) == ['pm', 'pmmv']
+    assert sorted(called) == ['pmmv', 'vp']
 
 
 def test_device_info(cli_hm, tmp_path, capsys, monkeypatch):
@@ -461,8 +461,8 @@ def test_main_colour_flags(run_main, monkeypatch):
 
 def test_main_debug_flag_file(run_main, monkeypatch, tmp_path):
     flag_dir = tmp_path / "flagtools"
-    (flag_dir / "PortMaster").mkdir(parents=True)
-    (flag_dir / "PortMaster" / "debug_all_the_things_flag").write_text("")
+    (flag_dir / "Volkyport").mkdir(parents=True)
+    (flag_dir / "Volkyport" / "debug_all_the_things_flag").write_text("")
     monkeypatch.setattr(harbourmaster, "HM_TOOLS_DIR", flag_dir)
 
     removed = []
@@ -477,7 +477,7 @@ def test_main_debug_flag_file(run_main, monkeypatch, tmp_path):
 
 
 def test_main_no_log_without_a_log_file(run_main, monkeypatch, capsys):
-    ## With no PortMaster folder at import there was no LOG_FILE_HANDLE at all: --no-log
+    ## With no Volkyport folder at import there was no LOG_FILE_HANDLE at all: --no-log
     ## raised NameError, which logger.catch swallowed, so the command never ran.
     removed = []
     monkeypatch.setattr(cli, "LOG_FILE_HANDLE", None)

@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 #
-# PortMasterGUI.run_task and the thread aware callbacks, using a real (headless)
-# PortMasterGUI in this process.
+# VolkyportGUI.run_task and the thread aware callbacks, using a real (headless)
+# VolkyportGUI in this process.
 
 import os
 import threading

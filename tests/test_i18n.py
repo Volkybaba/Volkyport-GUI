@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# Translations: PortMaster/pylibs/locales/<lang>.json, read by harbourmaster.i18n, and the
+# Translations: Volkyport/pylibs/locales/<lang>.json, read by harbourmaster.i18n, and the
 # list of every translatable string, locales/strings.json (tools/i18n.py extract).
 
 import json
@@ -130,13 +130,13 @@ SAFETY_CASES = [
 
 @pytest.mark.parametrize("text, translation, safe", SAFETY_CASES)
 def test_safe_translation(text, translation, safe):
-    ## The same answer from PortMaster and from the translation editor's own copy.
+    ## The same answer from Volkyport and from the translation editor's own copy.
     assert i18n.safe_translation(text, translation) is safe
     assert i18n_tool.safe_translation(text, translation) is safe
 
 
 def test_unsafe_translations_are_english(tmp_path, restore_language):
-    ## Would raise in the code's .format() and stop PortMaster: shown in English instead.
+    ## Would raise in the code's .format() and stop Volkyport: shown in English instead.
     (tmp_path / "xx_XX.json").write_text(json.dumps({
         "{lang_name} (Selected)": "{bogus} (Ausgewählt)",
         "Installing {port_name}": "{port_name} wird installiert",

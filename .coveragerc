@@ -1,8 +1,8 @@
 ## Coverage for the project code, not the vendored libraries.
 [run]
 source =
-    PortMaster/pylibs/harbourmaster
-    PortMaster/pylibs/pugwash
+    Volkyport/pylibs/harbourmaster
+    Volkyport/pylibs/pugwash
 branch = True
 ## Installs and downloads run on worker threads.
 concurrency = thread

@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# Changing theme, colour scheme or language without a restart (PortMasterGUI.reload_theme
+# Changing theme, colour scheme or language without a restart (VolkyportGUI.reload_theme
 # and reload_language): the screens after switching away and back must be the same as
 # before, so nothing of the other theme or language is left behind.
 
@@ -54,7 +54,7 @@ def app(gui, hm_dirs, monkeypatch):
 @pytest.fixture
 def other_theme():
     """A copy of the default theme with other colours, installed where themes go."""
-    theme_dir = harbourmaster.HM_TOOLS_DIR / "PortMaster" / "themes" / "Other Theme"
+    theme_dir = harbourmaster.HM_TOOLS_DIR / "Volkyport" / "themes" / "Other Theme"
     shutil.copytree(str(PM_DIR / "pylibs" / "default_theme"), str(theme_dir))
     data = json.loads((theme_dir / "theme.json").read_text())
     data["#info"]["name"] = "Other Theme"

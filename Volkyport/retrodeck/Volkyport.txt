@@ -1,0 +1,12 @@
+#!/bin/bash
+#
+# SPDX-License-Identifier: MIT
+#
+# Launches Volkyport: everything else lives in $controlfolder/utils/vp_launch.txt
+# and retrodeck/launch_hooks.txt.
+
+XDG_DATA_HOME=${XDG_DATA_HOME:-$HOME/.local/share}
+
+controlfolder="$XDG_DATA_HOME/Volkyport"
+
+source "$controlfolder/utils/vp_launch.txt" retrodeck; exit $?

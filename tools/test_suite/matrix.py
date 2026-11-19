@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: MIT
 #
-# The coverage matrix for PortMaster Test Suite reports: which CFW / version / device
+# The coverage matrix for Volkyport Test Suite reports: which CFW / version / device
 # combinations ran, how each section went, and which tests failed where.
 #
 #   python3 -I tools/test_suite/matrix.py <folder of report zips> [--out DIR] [--title TEXT]
@@ -37,7 +37,7 @@ SECTIONS = (
     ("interactive", "Buttons"),
     )
 
-INFO_KEYS = ("cfw", "cfw_version", "os", "device", "arch", "python", "sdl", "portmaster", "started")
+INFO_KEYS = ("cfw", "cfw_version", "os", "device", "arch", "python", "sdl", "volkyport", "started")
 
 
 ################################################################################
@@ -655,7 +655,7 @@ CELL_STATUS = {"pass": "all passing", "fail": "failing", "mixed": "passing now, 
 def _cell_title(name, cfw, major, runs, status):
     lines = [f"{name} · {cfw} {major}".rstrip(), f"{len(runs)} report{'s' if len(runs) != 1 else ''}, {CELL_STATUS[status]}"]
     lines.append("Versions: " + ", ".join(sorted({run['cfw_version'] for run in runs}, key=version_key, reverse=True)))
-    builds = sorted({run['portmaster'] for run in runs if run['portmaster']})
+    builds = sorted({run['volkyport'] for run in runs if run['volkyport']})
     if builds:
         lines.append("Builds: " + (builds[0] if len(builds) == 1 else f"{builds[0]} to {builds[-1]}"))
     lines.append("Reported as: " + ", ".join(sorted({_device_name(run) for run in runs})))
@@ -761,13 +761,13 @@ def render_grid(add, rows, catalogue, setup_ids):
     add(f'<td class="n">{len(rows)}</td></tr></tfoot></table></div></div></section>')
 
 
-def render_html(rows, title="PortMaster Test Matrix", built=None, catalogue=None):
+def render_html(rows, title="Volkyport Test Matrix", built=None, catalogue=None):
     built = built or datetime.datetime.now()
     groups = group_rows(rows)
     failures = failure_index(rows)
     cfws = sorted({row['cfw'] for row in rows}, key=str.lower)
     hardware = {row["device_name"] or _device_name(row) for row in rows}
-    builds = sorted({row['portmaster'] for row in rows if row['portmaster']})
+    builds = sorted({row['volkyport'] for row in rows if row['volkyport']})
     passing = sum(1 for runs in groups.values() if runs[0]['ok'])
     setup_ids = {id(run): f"setup-{number}" for number, runs in enumerate(groups.values()) for run in runs}
 
@@ -782,7 +782,7 @@ def render_html(rows, title="PortMaster Test Matrix", built=None, catalogue=None
     ## Summary
     add("<header>")
     add(f"<h1>{_e(title)}</h1>")
-    add(f'<p class="lede">PortMaster Test Suite reports from testers\' devices: the newest run of each CFW, version and device, '
+    add(f'<p class="lede">Volkyport Test Suite reports from testers\' devices: the newest run of each CFW, version and device, '
         f'then every test that failed anywhere.{_builds_line(builds)}</p>')
     add('<ul class="counts">')
     for number, label in ((len(rows), "reports"), (len(groups), "setups"), (len(hardware), "devices"), (len(cfws), "CFWs"),
@@ -835,7 +835,7 @@ def render_html(rows, title="PortMaster Test Matrix", built=None, catalogue=None
         for key, _ in SECTIONS:
             section = row['sections'].get(key)
             add(f"<td>{_chip(section['status'] if section else 'none')}</td>")
-        add(f'<td>{_e(row["gui_how"] or "—")}</td><td class="data">{_e(row["portmaster"])}</td><td class="data">{len(runs)}</td></tr>')
+        add(f'<td>{_e(row["gui_how"] or "—")}</td><td class="data">{_e(row["volkyport"])}</td><td class="data">{len(runs)}</td></tr>')
 
     add("</tbody></table></div></section>")
 
@@ -855,7 +855,7 @@ def render_html(rows, title="PortMaster Test Matrix", built=None, catalogue=None
     add('<section aria-labelledby="runs"><h2 id="runs">Every run</h2><div>')
     for row in rows:
         add(f"<details><summary>{_chip('pass' if row['ok'] else 'fail')}<strong>{_e(_device_label(row))}</strong>"
-            f'<span class="muted data">{_e(row["started"])} · {_e(row["portmaster"])} · {_e(row["report"])}</span></summary>')
+            f'<span class="muted data">{_e(row["started"])} · {_e(row["volkyport"])} · {_e(row["report"])}</span></summary>')
         add(f'<p class="muted">Python {_e(row["python"])}, SDL {_e(row["sdl"])}{" (with a load warning)" if row["sdl_warned"] and row["sdl"] != "broken" else ""}, video drivers: {_e(" ".join(row["video_drivers"]) or "none")}'
             f'{"" if row["scrubbed"] else ". Not scrubbed (made before scrubbing)"}</p>')
         for key, section in row['sections'].items():
@@ -872,10 +872,10 @@ def render_html(rows, title="PortMaster Test Matrix", built=None, catalogue=None
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Coverage matrix from PortMaster Test Suite reports")
+    parser = argparse.ArgumentParser(description="Coverage matrix from Volkyport Test Suite reports")
     parser.add_argument("folder", help="folder of report zips (searched recursively)")
     parser.add_argument("--out", default=".", help="where to write matrix.json and matrix.html")
-    parser.add_argument("--title", default="PortMaster Test Matrix")
+    parser.add_argument("--title", default="Volkyport Test Matrix")
     options = parser.parse_args(argv)
 
     rows = read_reports(options.folder)

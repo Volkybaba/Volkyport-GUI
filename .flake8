@@ -21,7 +21,7 @@ ignore =
     F824,
 
 per-file-ignores =
-    PortMaster/pylibs/harbourmaster/*:E225
-    PortMaster/pylibs/harbourmaster/hardware.py:E201,E241
-    PortMaster/pugwash:E402
-    PortMaster/harbourmaster:E402
+    Volkyport/pylibs/harbourmaster/*:E225
+    Volkyport/pylibs/harbourmaster/hardware.py:E201,E241
+    Volkyport/pugwash:E402
+    Volkyport/harbourmaster:E402

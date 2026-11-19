@@ -1,20 +1,20 @@
-# Introducing the All-New PortMaster: Your Ultimate Handheld Linux Port Manager
+# Introducing the All-New Volkyport: Your Ultimate Handheld Linux Port Manager
 
-We are thrilled to announce the launch of the new PortMaster, a complete overhaul of our port management program designed to provide you with an exceptional experience when installing, updating, and uninstalling Ports on your handheld Linux devices. The original PortMaster was built around the limited bash command 'dialog,' but now, we're introducing a game-changing solution with a multitude of new features and improvements that we think you'll love!
+We are thrilled to announce the launch of the new Volkyport, a complete overhaul of our port management program designed to provide you with an exceptional experience when installing, updating, and uninstalling Ports on your handheld Linux devices. The original Volkyport was built around the limited bash command 'dialog,' but now, we're introducing a game-changing solution with a multitude of new features and improvements that we think you'll love!
 
-We are thrilled to unveil the all-new PortMaster, a game-changing program designed to streamline the management of Ports on your handheld Linux devices. Our revamped PortMaster is set to redefine your experience with its innovative features and improvements. Say goodbye to the limitations of the old version built upon a text-based user interface.
+We are thrilled to unveil the all-new Volkyport, a game-changing program designed to streamline the management of Ports on your handheld Linux devices. Our revamped Volkyport is set to redefine your experience with its innovative features and improvements. Say goodbye to the limitations of the old version built upon a text-based user interface.
 
-# New Features: Unleash the Power of PortMaster
+# New Features: Unleash the Power of Volkyport
 
-With the new and improved PortMaster, you can expect a world of enhancements and cutting-edge capabilities at your fingertips. Here's a glimpse of what's in store:
+With the new and improved Volkyport, you can expect a world of enhancements and cutting-edge capabilities at your fingertips. Here's a glimpse of what's in store:
 
 ## Custom GUI with Python SDL2 Bindings
 
-PortMaster now boasts a completely custom graphical user interface built using Python SDL2 bindings, providing an intuitive and user-friendly experience.
+Volkyport now boasts a completely custom graphical user interface built using Python SDL2 bindings, providing an intuitive and user-friendly experience.
 
 ## Compact and Lightweight
 
-PortMaster is incredibly efficient, with a download size of just 8MB. Say goodbye to bulky software that eats up your device's storage.
+Volkyport is incredibly efficient, with a download size of just 8MB. Say goodbye to bulky software that eats up your device's storage.
 
 ## Port Previews
 
@@ -22,7 +22,7 @@ Discover Ports like never before with our new port preview feature. Get a sneak 
 
 ## Cancellable Downloads
 
-Ever accidentally started a massive download? No worries! PortMaster allows you to cancel downloads, so you can avoid wasting time and data on unwanted files.
+Ever accidentally started a massive download? No worries! Volkyport allows you to cancel downloads, so you can avoid wasting time and data on unwanted files.
 
 ## Enhanced Port Management
 
@@ -30,32 +30,32 @@ Filter Ports by genre, runtime, update availability, and installation status, an
 
 ## Localization Support
 
-PortMaster is available in multiple languages, including English, Italian, French, German, and Polish. We welcome contributions from translators to make it even more accessible to users around the world. [Contributions can be made through our Crowdin](https://crowdin.com/project/portmaster).
+Volkyport is available in multiple languages, including English, Italian, French, German, and Polish. We welcome contributions from translators to make it even more accessible to users around the world. [Contributions can be made through our Crowdin](https://crowdin.com/project/volkyport).
 
 ## Runtime Manager
 
-Manage runtimes seamlessly within PortMaster. You can install, update, verify, and uninstall runtimes directly through the program.
+Manage runtimes seamlessly within Volkyport. You can install, update, verify, and uninstall runtimes directly through the program.
 
-# Introducing PortMaster Themes
+# Introducing Volkyport Themes
 
-PortMaster now supports customizable themes. With multiple color schemes for dark mode, light mode, and unique color variations, you can tailor the program to your preferences. We even have a built-in theme downloader for your convenience. Our initial theme lineup includes:
+Volkyport now supports customizable themes. With multiple color schemes for dark mode, light mode, and unique color variations, you can tailor the program to your preferences. We even have a built-in theme downloader for your convenience. Our initial theme lineup includes:
 
 - **Default Theme**: Available in both light and dark modes.
 - **Zelda**: Inspired by the aesthetics of The Legend of Zelda: A Link to the Past.
 - **FF VII**: A visually stunning theme inspired by Final Fantasy VII.
 - **Basic Theme**: A minimalist theme, perfect for those who want to design their own.
 
-# New PortMaster Installer
+# New Volkyport Installer
 
-We have simplified the installation process with a self-contained PortMaster installer, which is itself a basic port. This installer will self-extract and place all the necessary files in the right locations to ensure a hassle-free installation on any known Custom Firmware (CFW). Installing PortMaster is now a straightforward two-step process, and it also includes fixes for JELOS and its version of PortMaster.
+We have simplified the installation process with a self-contained Volkyport installer, which is itself a basic port. This installer will self-extract and place all the necessary files in the right locations to ensure a hassle-free installation on any known Custom Firmware (CFW). Installing Volkyport is now a straightforward two-step process, and it also includes fixes for JELOS and its version of Volkyport.
 
 # Brand New Website and Wiki
 
-We've been hard at work building a brand new website for PortMaster at https://portmaster.games/. This site includes an extensive wiki with screenshots for each port, updated documentation, and tools to assist in creating new Ports.
+We've been hard at work building a brand new website for Volkyport at https://volkyport.games/. This site includes an extensive wiki with screenshots for each port, updated documentation, and tools to assist in creating new Ports.
 
-# Join the PortMaster Discord Community
+# Join the Volkyport Discord Community
 
-We've also launched a dedicated PortMaster Discord community. It has become a bustling hub for port enthusiasts, where you can stay updated on the latest port developments, seek assistance with ports, get help with PortMaster-related issues, or even collaborate and receive feedback on creating your own ports. [Join our Discord community today](https://discord.gg/m2QcSkMh).
+We've also launched a dedicated Volkyport Discord community. It has become a bustling hub for port enthusiasts, where you can stay updated on the latest port developments, seek assistance with ports, get help with Volkyport-related issues, or even collaborate and receive feedback on creating your own ports. [Join our Discord community today](https://discord.gg/m2QcSkMh).
 
 # Under the Hood Improvements
 
@@ -63,4 +63,4 @@ We've made significant enhancements under the hood. Say goodbye to the manual ed
 
 # How to get it?
 
-For **ArkOS**, **AmberELEC**, and **uOS**, simply run PortMaster on your device if it's already installed, and it will automatically update to the latest version. Otherwise you will need to follow the instructions from https://portmaster.games/installation.html
+For **ArkOS**, **AmberELEC**, and **uOS**, simply run Volkyport on your device if it's already installed, and it will automatically update to the latest version. Otherwise you will need to follow the instructions from https://volkyport.games/installation.html

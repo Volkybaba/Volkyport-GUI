@@ -25,9 +25,9 @@ def write_runtimes_zip(zip_path, comment=None, files=("test.squashfs", )):
     return zip_path
 
 
-def write_portmaster_zip(zip_path):
+def write_volkyport_zip(zip_path):
     with zipfile.ZipFile(zip_path, 'w') as zf:
-        zf.writestr("PortMaster/autoinstall-test.txt", "new PortMaster")
+        zf.writestr("Volkyport/autoinstall-test.txt", "new Volkyport")
 
     return zip_path
 
@@ -45,8 +45,8 @@ def dirs(tmp_path):
 
 def test_find_order_and_kinds(dirs):
     dir_1, dir_2 = dirs
-    write_portmaster_zip(dir_2 / "PortMaster.zip")
-    write_portmaster_zip(dir_1 / "PortMaster.zip")
+    write_volkyport_zip(dir_2 / "Volkyport.zip")
+    write_volkyport_zip(dir_1 / "Volkyport.zip")
     write_runtimes_zip(dir_1 / "runtimes.zip")
     write_runtimes_zip(dir_2 / "runtimes.full.aarch64.zip", "aarch64")
     (dir_2 / "mono-6.12.0.122-aarch64.squashfs").write_bytes(b"squash")
@@ -56,8 +56,8 @@ def test_find_order_and_kinds(dirs):
 
     files = autoinstall.find_autoinstall_files([dir_1, dir_2, dir_1 / "missing"])
 
-    ## Only the first PortMaster.zip, the first directory wins.
-    assert files['portmaster'] == [dir_1 / "PortMaster.zip"]
+    ## Only the first Volkyport.zip, the first directory wins.
+    assert files['volkyport'] == [dir_1 / "Volkyport.zip"]
     assert files['runtimes'] == [dir_1 / "runtimes.zip", dir_2 / "runtimes.full.aarch64.zip"]
     assert files['squashfs'] == [dir_2 / "mono-6.12.0.122-aarch64.squashfs"]
     assert files['ports'] == [dir_1 / "b.zip", dir_2 / "a.zip"]
@@ -182,14 +182,14 @@ def test_install_order(hm, dirs, monkeypatch):
     write_port_zip(dir_1 / "aaa.zip", basic_port_files())
     (dir_2 / "godot.squashfs").write_bytes(b"squash")
     write_runtimes_zip(dir_2 / "runtimes.zip")
-    write_portmaster_zip(dir_2 / "PortMaster.zip")
+    write_volkyport_zip(dir_2 / "Volkyport.zip")
 
     installed = []
     real_install = hm.install_port
 
     def install_port(name, *args, **kwargs):
         installed.append(name.rsplit('/', 1)[-1])
-        if name.endswith("PortMaster.zip"):
+        if name.endswith("Volkyport.zip"):
             return 0
 
         return real_install(name, *args, **kwargs)
@@ -198,21 +198,21 @@ def test_install_order(hm, dirs, monkeypatch):
 
     results, _ = run(hm, dir_1, dir_2)
 
-    assert [r.name for r in results] == ["PortMaster.zip", "runtimes.zip", "godot.squashfs", "aaa.zip"]
-    assert installed == ["PortMaster.zip", "aaa.zip"]
+    assert [r.name for r in results] == ["Volkyport.zip", "runtimes.zip", "godot.squashfs", "aaa.zip"]
+    assert installed == ["Volkyport.zip", "aaa.zip"]
     assert all(r.ok for r in results)
     assert list(dir_1.iterdir()) == list(dir_2.iterdir()) == []
 
 
-def test_portmaster_zip_installs(hm, dirs):
+def test_volkyport_zip_installs(hm, dirs):
     dir_1, _ = dirs
-    write_portmaster_zip(dir_1 / "PortMaster.zip")
+    write_volkyport_zip(dir_1 / "Volkyport.zip")
 
     results, _ = run(hm, dir_1)
 
     assert results[0].ok, results
-    assert (hm.tools_dir / "PortMaster" / "autoinstall-test.txt").is_file()
-    assert not (dir_1 / "PortMaster.zip").exists()
+    assert (hm.tools_dir / "Volkyport" / "autoinstall-test.txt").is_file()
+    assert not (dir_1 / "Volkyport.zip").exists()
 
 
 def test_install_exception_is_a_failure(hm, dirs, monkeypatch):
@@ -335,7 +335,7 @@ def test_fifo_requests_frontend_refresh(fifo, dirs, gui, monkeypatch):
 
 
 def test_summary_refresh_text():
-    ## eg: RetroDECK, whose ES-DE PortMaster can't restart: say how to rescan.
+    ## eg: RetroDECK, whose ES-DE Volkyport can't restart: say how to rescan.
     installed = [autoinstall.AutoinstallResult("good.zip", True)]
     failed = [autoinstall.AutoinstallResult("bad.zip", False, "broken")]
 

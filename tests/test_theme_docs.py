@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: MIT
 #
 # THEME.md, the theme reference, keeps up with the theme engine: every region key, screen,
-# tag and "#" section PortMaster knows (as the theme editor reads them from its code) is in
+# tag and "#" section Volkyport knows (as the theme editor reads them from its code) is in
 # it, and every picture it shows is there. A new key fails here until it's documented.
 
 import re
@@ -16,7 +16,7 @@ from theme_server import schema
 ROOT = PM_DIR.parent
 DOC = (ROOT / "THEME.md").read_text(encoding="utf-8")
 
-## Screens nobody themes: PortMaster's built-in ones and the one nothing opens.
+## Screens nobody themes: Volkyport's built-in ones and the one nothing opens.
 NOT_THEMED = {"disclaimer", "blank"}
 
 

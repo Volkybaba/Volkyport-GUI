@@ -2,7 +2,7 @@
 
 # Downloady of File
 if [ ! -f "runtimes_zips.json" ]; then
-  curl -L -o runtimes_zips.json $(curl -s https://api.github.com/repos/PortsMaster/PortMaster-New/releases/latest | jq -r '.assets[] | select(.name=="runtimes_zips.json") | .browser_download_url')
+  curl -L -o runtimes_zips.json $(curl -s https://api.github.com/repos/Volkybaba/Volkyport-New/releases/latest | jq -r '.assets[] | select(.name=="runtimes_zips.json") | .browser_download_url')
 fi
 
 RUNTIME_ARCH="${RUNTIME_ARCH:-aarch64}"

@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# SPDX-License-Identifier: MIT
+#
+# Launches Volkyport: everything else lives in $controlfolder/utils/vp_launch.txt
+# and muos/launch_hooks.txt.
+
+controlfolder="/mnt/mmc/MUOS/Volkyport"
+
+source "$controlfolder/utils/vp_launch.txt" muos; exit $?

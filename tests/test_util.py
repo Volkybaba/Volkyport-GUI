@@ -161,7 +161,7 @@ def test_git_blob_sha(tmp_path):
 
 
 ################################################################################
-## PortMaster script signatures
+## Volkyport script signatures
 def test_pm_signature_round_trip(tmp_path):
     script = tmp_path / "Game.sh"
     script.write_text("#!/bin/bash\necho hi\n")
@@ -172,12 +172,12 @@ def test_pm_signature_round_trip(tmp_path):
     assert util.load_pm_signature(script) == ["game.zip", "Game.sh"]
     lines = script.read_text().split("\n")
     assert lines[0] == "#!/bin/bash"
-    assert lines[1] == "# PORTMASTER: game.zip, Game.sh"
+    assert lines[1] == "# VOLKYPORT: game.zip, Game.sh"
 
     ## Re-signing replaces the old signature rather than adding another.
     util.add_pm_signature(script, ["other.zip", "Game.sh"])
     assert util.load_pm_signature(script) == ["other.zip", "Game.sh"]
-    assert script.read_text().count("PORTMASTER:") == 1
+    assert script.read_text().count("VOLKYPORT:") == 1
 
     util.remove_pm_signature(script)
     assert util.load_pm_signature(script) is None
@@ -199,7 +199,7 @@ def test_pm_signature_binary_script(tmp_path, log_errors, signed):
     script = tmp_path / "installer.sh"
     header = b"#!/bin/sh\n"
     if signed:
-        header += b"# PORTMASTER: game.zip, installer.sh\n"
+        header += b"# VOLKYPORT: game.zip, installer.sh\n"
 
     script.write_bytes(header + b"echo unpacking\n" + bytes(range(256)) * 8)
 
@@ -209,7 +209,7 @@ def test_pm_signature_binary_script(tmp_path, log_errors, signed):
 
 def test_replace_file_is_a_new_file(tmp_path):
     ## A running bash script keeps reading the old file.
-    target = tmp_path / "PortMaster.sh"
+    target = tmp_path / "Volkyport.sh"
     target.write_text("old launcher\n")
     source = tmp_path / "new.txt"
     source.write_text("new launcher\n")
@@ -220,7 +220,7 @@ def test_replace_file_is_a_new_file(tmp_path):
         assert running.read() == "old launcher\n"
 
     assert target.read_text() == "new launcher\n"
-    assert sorted(path.name for path in tmp_path.iterdir()) == ["PortMaster.sh", "new.txt"]
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["Volkyport.sh", "new.txt"]
 
 
 ################################################################################

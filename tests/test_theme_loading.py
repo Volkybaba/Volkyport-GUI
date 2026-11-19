@@ -3,7 +3,7 @@
 # pugwash.theme.theme_load / theme_apply: a theme's JSON to the sections the scenes draw:
 # "#base", "#elements", "#pallet", "#resources", colour schemes, requirement tags on
 # sections, regions and elements ("[640x480]", "[ja_JP|zh_CN]", "[!opengl]"), a theme's own
-# "#translations", and the sections PortMaster adds itself. A fake GUI records what's loaded.
+# "#translations", and the sections Volkyport adds itself. A fake GUI records what's loaded.
 
 import json
 from types import SimpleNamespace
@@ -374,7 +374,7 @@ def test_text_without_tags_is_translated(gui, monkeypatch):
 
 
 ################################################################################
-## What PortMaster adds
+## What Volkyport adds
 def test_disclaimer_is_always_the_same(load, capabilities):
     sections, _ = load({"disclaimer": {"background": {"fill": [255, 0, 0]}}})
 

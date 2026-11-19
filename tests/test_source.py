@@ -13,7 +13,7 @@ REAL_FETCH_JSON = hm_net.fetch_json
 
 @pytest.fixture
 def pm_source(hm, ports_json_data, monkeypatch):
-    """The default PortMaster source, updated from tests/data/ports.json."""
+    """The default Volkyport source, updated from tests/data/ports.json."""
     fetched = []
 
     def fake_fetch_json(url):
@@ -22,16 +22,16 @@ def pm_source(hm, ports_json_data, monkeypatch):
 
     monkeypatch.setattr(hm_net, "fetch_json", fake_fetch_json)
 
-    source = hm.sources['pm']
+    source = hm.sources['vp']
     source.update()
     source.fetched = fetched
     return source
 
 
 def test_default_sources(hm):
-    assert sorted(hm.sources) == ['pm', 'pmmv']
+    assert sorted(hm.sources) == ['pmmv', 'vp']
     assert all(isinstance(source, hm_source.PortMasterV3) for source in hm.sources.values())
-    assert hm.sources['pm'].name == "PortMaster"
+    assert hm.sources['vp'].name == "Volkyport"
 
 
 def test_update_loads_ports(pm_source, ports_json_data):
@@ -60,7 +60,7 @@ def test_update_registers_runtimes_per_arch(pm_source, hm):
 def test_update_saves_and_reloads(pm_source, make_hm, ports_json_data):
     ## A second HarbourMaster on the same dirs loads the cached source without fetching.
     hm2 = make_hm()
-    assert sorted(hm2.sources['pm'].ports) == sorted(ports_json_data['ports'])
+    assert sorted(hm2.sources['vp'].ports) == sorted(ports_json_data['ports'])
 
 
 def test_runtime_size_added_to_download_size(pm_source, hm, ports_json_data):
@@ -79,7 +79,7 @@ def test_download_unknown_port(pm_source, callback):
 def test_update_failure_keeps_going(hm, monkeypatch):
     monkeypatch.setattr(hm_net, "fetch_json", lambda url: None)
 
-    source = hm.sources['pm']
+    source = hm.sources['vp']
     source.update()
 
     assert source.ports == []
@@ -87,7 +87,7 @@ def test_update_failure_keeps_going(hm, monkeypatch):
 
 def test_update_again_fetches_again(pm_source, ports_json_data):
     ## "Update ports" after the startup update emptied the list until a restart. It
-    ## fetches again: a release may have been made since PortMaster started.
+    ## fetches again: a release may have been made since Volkyport started.
     ports_json_data['ports']['sprout.zip']['attr']['title'] = "Sprout, the new release"
     pm_source.update()
 
@@ -107,7 +107,7 @@ def test_failed_update_keeps_the_cached_ports(pm_source, make_hm, ports_json_dat
 
     monkeypatch.setattr(hm_net, "fetch_json", REAL_FETCH_JSON)
     monkeypatch.setattr(hm_net.requests, "get", timeout)
-    source = make_hm(offline=False, **{'no-check': False}).sources['pm']
+    source = make_hm(offline=False, **{'no-check': False}).sources['vp']
 
     assert sorted(source.ports) == sorted(ports_json_data['ports'])
     assert source.port_download_url("sprout.zip") == ports_json_data['ports']['sprout.zip']['source']['url']
@@ -236,7 +236,7 @@ def test_raw_download_md5_file(tmp_path, callback, served):
 
 def test_raw_download_md5_file_and_query(tmp_path, callback, served):
     ## The md5 is in the link, so the .md5 file isn't fetched: the zip is downloaded and checked.
-    ## (DeviceHub sends these: older PortMasters fetch the .md5 file, then the zip, from the same link.)
+    ## (DeviceHub sends these: older Volkyports fetch the .md5 file, then the zip, from the same link.)
     url = f"https://example.com/port.zip.md5?md5={served.md5}"
     result = hm_source.raw_download(tmp_path, url, callback=callback)
     assert result is not None and result['name'] == "port.zip"
@@ -269,20 +269,20 @@ def test_install_md5_query(hm, callback, served, monkeypatch):
     monkeypatch.setitem(hm.config, 'offline', False)
     monkeypatch.setattr(hm, "callback", callback)
     installed = []
-    monkeypatch.setattr(hm, "_install_portmaster", lambda zip_file, do_delete=False: installed.append(zip_file.name) or 0)
+    monkeypatch.setattr(hm, "_install_volkyport", lambda zip_file, do_delete=False: installed.append(zip_file.name) or 0)
 
-    assert hm.install_port(f"https://example.com/PortMaster.zip?md5={served.md5}") == 0
-    assert installed == ["PortMaster.zip"] and served.got == ["https://example.com/PortMaster.zip"]
+    assert hm.install_port(f"https://example.com/Volkyport.zip?md5={served.md5}") == 0
+    assert installed == ["Volkyport.zip"] and served.got == ["https://example.com/Volkyport.zip"]
 
-    assert hm.install_port(f"https://example.com/PortMaster.zip?md5={'0' * 32}") == 255
+    assert hm.install_port(f"https://example.com/Volkyport.zip?md5={'0' * 32}") == 255
     assert len(installed) == 1
 
 
 ################################################################################
 ## Old source files are upgraded to PortMasterV3 when loaded.
 LEGACY_SOURCES = {
-    "020_portmaster.source.json": ("pm", "PortMaster",
-        "https://github.com/PortsMaster/PortMaster-New/releases/latest/download/ports.json"),
+    "020_volkyport.source.json": ("vp", "Volkyport",
+        "https://github.com/Volkybaba/Volkyport-New/releases/latest/download/ports.json"),
     "021_portmaster.multiverse.source.json": ("pmmv", "PortMaster Multiverse",
         "https://github.com/PortsMaster-MV/PortMaster-MV-New/releases/latest/download/ports.json"),
     }
@@ -313,14 +313,14 @@ def test_unknown_source_api_is_skipped(make_hm):
     hm = make_hm()
 
     assert "custom" not in hm.sources
-    assert sorted(hm.sources) == ['pm', 'pmmv']
+    assert sorted(hm.sources) == ['pmmv', 'vp']
 
 
 ################################################################################
 ## A ports.json from any source: entries it can't use are skipped, not fatal.
 def update_with(hm, monkeypatch, data):
     monkeypatch.setattr(hm_net, "fetch_json", lambda url: json.loads(json.dumps(data)))
-    source = hm.sources['pm']
+    source = hm.sources['vp']
     source.update()
     return source
 

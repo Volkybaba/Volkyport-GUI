@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: MIT
 #
-# On a device PortMaster ships as the two scripts plus pylibs.zip, which the
+# On a device Volkyport ships as the two scripts plus pylibs.zip, which the
 # scripts extract over pylibs/ and exlibs/ on first run. From a git checkout that
 # step is skipped, so test it here with a copy that has no .git above it.
 
@@ -34,7 +34,7 @@ def build_pylibs_zip(zip_path):
 
 @pytest.fixture(scope="module")
 def release_dir(tmp_path_factory):
-    pm_dir = tmp_path_factory.mktemp("release") / "PortMaster"
+    pm_dir = tmp_path_factory.mktemp("release") / "Volkyport"
     pm_dir.mkdir()
 
     for script in ("pugwash", "harbourmaster"):
@@ -111,7 +111,7 @@ def test_pugwash_fifo_from_release(release_dir, release_env, tmp_path):
 def test_pugwash_starts_without_noto_fonts(release_env, tmp_path):
     ## The CJK fonts come from pylibs/resources/NotoSans.tar.xz on first run; without
     ## it (or with a broken one) pugwash still has to start, just without those fonts.
-    pm_dir = tmp_path / "release" / "PortMaster"
+    pm_dir = tmp_path / "release" / "Volkyport"
     pm_dir.mkdir(parents=True)
     shutil.copy2(str(PM_DIR / "pugwash"), str(pm_dir / "pugwash"))
     build_pylibs_zip(pm_dir / "pylibs.zip")
@@ -120,7 +120,7 @@ def test_pugwash_starts_without_noto_fonts(release_env, tmp_path):
         zf.extractall(str(pm_dir))
 
     (pm_dir / "pylibs.zip").unlink()
-    ## (The PortMaster Test Suite's copy of the code doesn't have it to begin with.)
+    ## (The Volkyport Test Suite's copy of the code doesn't have it to begin with.)
     noto_fonts = pm_dir / "pylibs" / "resources" / "NotoSans.tar.xz"
     if noto_fonts.exists():
         noto_fonts.unlink()

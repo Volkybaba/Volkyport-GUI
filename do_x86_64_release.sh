@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# retrodeck.portmaster.zip: PortMaster for RetroDECK.
+# retrodeck.volkyport.zip: Volkyport for RetroDECK.
 #
-#   ./do_x86_64_release.sh            from dist/PortMaster.zip (./do_release.sh first)
-#   ./do_x86_64_release.sh CHANNEL from the latest alpha/beta/stable PortMaster.zip on GitHub
+#   ./do_x86_64_release.sh            from dist/Volkyport.zip (./do_release.sh first)
+#   ./do_x86_64_release.sh CHANNEL from the latest alpha/beta/stable Volkyport.zip on GitHub
 #
-# Writes dist/retrodeck.portmaster.zip.
+# Writes dist/retrodeck.volkyport.zip.
 
 set -euo pipefail
 
@@ -20,17 +20,17 @@ cd "$BUILD_DIR"
 
 case "${1:-}" in
   alpha|beta|stable)
-    curl -fL -o version.json "https://github.com/PortsMaster/PortMaster-GUI/releases/latest/download/version.json"
-    curl -fL -o PortMaster.zip "$(jq -r ".$1.url" version.json)"
-    PORTMASTER_ZIP="$BUILD_DIR/PortMaster.zip"
+    curl -fL -o version.json "https://github.com/Volkybaba/PortMaster-GUI/releases/latest/download/version.json"
+    curl -fL -o Volkyport.zip "$(jq -r ".$1.url" version.json)"
+    VOLKYPORT_ZIP="$BUILD_DIR/Volkyport.zip"
     ;;
   *)
-    PORTMASTER_ZIP="$DIST_DIR/PortMaster.zip"
+    VOLKYPORT_ZIP="$DIST_DIR/Volkyport.zip"
     ;;
 esac
 
-if [[ ! -f "$PORTMASTER_ZIP" ]]; then
-  echo "Missing $PORTMASTER_ZIP, run ./do_release.sh first."
+if [[ ! -f "$VOLKYPORT_ZIP" ]]; then
+  echo "Missing $VOLKYPORT_ZIP, run ./do_release.sh first."
   exit 255
 fi
 
@@ -38,16 +38,16 @@ mkdir -p RD_PM/
 
 (
   cd RD_PM/
-  unzip -q "$PORTMASTER_ZIP"
+  unzip -q "$VOLKYPORT_ZIP"
 
-  cd PortMaster
+  cd Volkyport
   cp retrodeck/control.txt control.txt
-  cp retrodeck/PortMaster.txt PortMaster.sh
+  cp retrodeck/Volkyport.txt Volkyport.sh
   rm -f tasksetter
   touch tasksetter
 )
 
 mkdir -p "$DIST_DIR"
-rm -f "$DIST_DIR/retrodeck.portmaster.zip"
-(cd RD_PM && zip -9qr "$DIST_DIR/retrodeck.portmaster.zip" PortMaster/)
-echo "Built $DIST_DIR/retrodeck.portmaster.zip"
+rm -f "$DIST_DIR/retrodeck.volkyport.zip"
+(cd RD_PM && zip -9qr "$DIST_DIR/retrodeck.volkyport.zip" Volkyport/)
+echo "Built $DIST_DIR/retrodeck.volkyport.zip"

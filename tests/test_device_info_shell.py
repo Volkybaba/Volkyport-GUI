@@ -135,7 +135,7 @@ def run_cfw_blocks(command, root):
     ("ArkOS wuMMLe (08242025)", "ArkOS wuMMLe|08242025"),  ## "mod_ArkOS wuMMLe.txt"
     ("ArkOS AeUX (08242025)", "ArkOS AeUX|08242025"),
     ("Welcome to ArkOS", "ArkOS|19.10"),               ## no date: Ubuntu's, as before
-    ## From the old PortMaster hardware_info collection:
+    ## From the old Volkyport hardware_info collection:
     ("ArkOS 2.0 (05242024)(AeUX)", "ArkOS AeUX|05242024"),
     ("ArkOS 351P/M wuMMLe (11052023)", "ArkOS wuMMLe|11052023"),
     (" *TheRA RC 1*", "TheRA|RC 1"),
@@ -198,7 +198,7 @@ def test_screen_capabilities_shell_and_theme_server_agree(width, height):
 ## while its DEVICE_INFO_VERSION matches (device_info.txt's fast path and hardware.py both reuse
 ## it), so a change without a new version never reaches a device that ran the old one: 0.2.6's
 ## new screen rules didn't, and the Retroid Pocket Classic stayed "wide".
-DEVICE_INFO_HASH = ("0.2.8", "d9262aeab60d98c3")
+DEVICE_INFO_HASH = ("0.2.9", "05515e6852d3dad3")
 
 
 def test_device_info_changes_come_with_a_new_version():

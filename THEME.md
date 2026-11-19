@@ -1,12 +1,12 @@
-# PortMaster theme reference
+# Volkyport theme reference
 
-Everything a PortMaster theme can do, and how PortMaster reads it.
+Everything a Volkyport theme can do, and how Volkyport reads it.
 
-![The default theme, PortMaster New: its three color schemes, as a list and as a grid](docs/theme/hero.png)
+![The default theme, Volkyport New: its three color schemes, as a list and as a grid](docs/theme/hero.png)
 
 **New to themes?** Start with the step-by-step guide, [Creating a theme](https://github.com/PortsMaster/PortMaster-Themes/blob/main/CREATING_A_THEME.md), in the PortMaster-Themes repository. It builds a theme from nothing, and shows how to test it and share it. Come back here when you want the details.
 
-The screenshots on this page are the default theme, **PortMaster New** (`PortMaster/pylibs/default_theme/`), rendered by the [theme server](#the-theme-server). `tools/theme_docs.py` makes them again when the theme changes.
+The screenshots on this page are the default theme, **Volkyport New** (`Volkyport/pylibs/default_theme/`), rendered by the [theme server](#the-theme-server). `tools/theme_docs.py` makes them again when the theme changes.
 
 ## Contents
 
@@ -32,7 +32,7 @@ The screenshots on this page are the default theme, **PortMaster New** (`PortMas
 - [Region keys](#region-keys)
 - [Tags](#tags)
 - [The theme server](#the-theme-server)
-- [Older PortMasters](#older-portmasters)
+- [Older Volkyports](#older-volkyports)
 
 ## A theme's files
 
@@ -41,15 +41,15 @@ A theme is a folder:
 ```
 my_theme/
 ├── theme.json          everything about the theme: this page
-├── screenshot.png      its picture in PortMaster's theme list (or screenshot.jpg)
+├── screenshot.png      its picture in Volkyport's theme list (or screenshot.jpg)
 ├── CREDITS.md          who made the fonts and images, and their licenses
 ├── LICENSE.*.txt       those licenses
 ├── MyFont.ttf          fonts and images, named in theme.json
 └── images/panel.png    (subfolders are fine: "image": "images/panel.png")
 ```
 
-- **Installed themes** live in `PortMaster/themes/<folder>/` on a device. PortMaster's theme list downloads them from the [PortMaster-Themes](https://github.com/PortsMaster/PortMaster-Themes) releases, as `<folder>.theme.zip` with the folder inside.
-- **File names** in `theme.json` are found in the theme's folder first, then in PortMaster's own `pylibs/resources/` (DejaVu Sans and the Noto Sans CJK fonts are there, so every theme can use them without carrying a copy).
+- **Installed themes** live in `Volkyport/themes/<folder>/` on a device. Volkyport's theme list downloads them from the [PortMaster-Themes](https://github.com/PortsMaster/PortMaster-Themes) releases, as `<folder>.theme.zip` with the folder inside.
+- **File names** in `theme.json` are found in the theme's folder first, then in Volkyport's own `pylibs/resources/` (DejaVu Sans and the Noto Sans CJK fonts are there, so every theme can use them without carrying a copy).
 - **Fonts** need a license that lets them be shared: the theme repository checks every font is listed in `CREDITS.md` with its license.
 
 ## theme.json at a glance
@@ -74,7 +74,7 @@ my_theme/
 }
 ```
 
-The `#` sections are the theme's settings and shared pieces. Every other top-level key is a **section**: one PortMaster screen, holding the **regions** drawn on it. A region is a rectangle that can have a fill, an outline, an image, text, a list or a bar of buttons. [The screens](#the-screens) lists every section and the regions it needs.
+The `#` sections are the theme's settings and shared pieces. Every other top-level key is a **section**: one Volkyport screen, holding the **regions** drawn on it. A region is a rectangle that can have a fill, an outline, an image, text, a list or a bar of buttons. [The screens](#the-screens) lists every section and the regions it needs.
 
 | Key | What it is |
 |---|---|
@@ -142,9 +142,9 @@ Any key can end in `[capabilities]`, and then counts only on devices that have t
 | `lowres` | narrower than 640 or shorter than 480 |
 | `wide` | 3:2 or wider (16:9, 16:10, 5:3 …) |
 | `square` | square or nearly: neither side more than 1.25 times the other (1:1, 1240x1080, 4:3 isn't) |
-| `en_US`, `de_DE`, `ja_JP` … | the language PortMaster is in |
+| `en_US`, `de_DE`, `ja_JP` … | the language Volkyport is in |
 | `layout_<name>` | the [layout](#layouts-a-list-or-a-grid) the player chose (`layout_grid`) |
-| `font_scale_auto` | PortMaster understands `"font-scale": "auto"`: see [Older PortMasters](#older-portmasters) |
+| `font_scale_auto` | Volkyport understands `"font-scale": "auto"`: see [Older Volkyports](#older-volkyports) |
 | `power` | anything faster than an RK3326 |
 | `opengl`, `vulkan` | desktop OpenGL (not just GLES), Vulkan |
 | `analog_0` … `analog_2`, `analog_triggers`, `touch`, `rumble` | the controls |
@@ -187,7 +187,7 @@ A parent is an `#elements` entry, or a region earlier in the same section. Here 
 
 ### Any screen size
 
-PortMaster runs on screens no theme lists: portrait, ultrawide, nearly square, smaller than 640x480. A layout holds together on all of them when:
+Volkyport runs on screens no theme lists: portrait, ultrawide, nearly square, smaller than 640x480. A layout holds together on all of them when:
 
 - **The screen is split into pieces, and each piece into smaller ones.** Give each a `parent` and fractions of it, so pieces next to each other meet where one ends (`[ 0.0, 0.11, 1.0, 0.52 ]`, then `[ 0.0, 0.52, 1.0, 1.0 ]`) instead of overlapping and being moved apart screen by screen. Then `area[…]` keys only move the splits (`"area[wide]"` on a pane), never single regions.
 - **Pixels are only padding inside a region's own box.** A region at `[ 5, 65, -5, -45 ]` stays 65 pixels down when the text above it is twice the size.
@@ -196,7 +196,7 @@ PortMaster runs on screens no theme lists: portrait, ultrawide, nearly square, s
 
 ![The main menu at 480x320, 640x480, 720x720 and 1280x720](docs/theme/screen-sizes.png)
 
-`serve.py --export OUT --check` renders every screen, then checks what each region drew where. It lists text or images of two regions on top of each other, content off the screen or outside its own region, and (as a warning) text drawn smaller or bigger than its font size, because its box doesn't fit it. It exits 1 if anything worse than a warning turns up. PortMaster's tests run it on the default theme at seven sizes.
+`serve.py --export OUT --check` renders every screen, then checks what each region drew where. It lists text or images of two regions on top of each other, content off the screen or outside its own region, and (as a warning) text drawn smaller or bigger than its font size, because its box doesn't fit it. It exits 1 if anything worse than a warning turns up. Volkyport's tests run it on the default theme at seven sizes.
 
 ## Colors
 
@@ -289,7 +289,7 @@ A list scrolls its selected row's text the same way.
 
 ### Chinese, Japanese and Korean
 
-Fonts like Roboto have no Chinese, Japanese or Korean letters, so those languages need fonts of their own. PortMaster has Noto Sans for each: `NotoSansJP-Regular.ttf`, `NotoSansKR-Regular.ttf`, `NotoSansSC-Regular.ttf` (simplified Chinese), `NotoSansTC-Regular.ttf` and `NotoSansHK-Regular.ttf`. `font-override` in `#base`, per language, is the font every region uses in that language, whatever font it names. Those fonts are taller, so `line-height-scale` makes the lines a little closer:
+Fonts like Roboto have no Chinese, Japanese or Korean letters, so those languages need fonts of their own. Volkyport has Noto Sans for each: `NotoSansJP-Regular.ttf`, `NotoSansKR-Regular.ttf`, `NotoSansSC-Regular.ttf` (simplified Chinese), `NotoSansTC-Regular.ttf` and `NotoSansHK-Regular.ttf`. `font-override` in `#base`, per language, is the font every region uses in that language, whatever font it names. Those fonts are taller, so `line-height-scale` makes the lines a little closer:
 
 ```json
     "#base": {
@@ -349,10 +349,10 @@ A color scheme can change `#resources` (its own `BACKGROUND`, say): see [Color s
 
 ### Which images stay loaded
 
-- **The theme's own images** (its files and PortMaster's, by name: `#resources`, a region's `image` and `pointer`, animation frames) stay loaded until the theme does.
+- **The theme's own images** (its files and Volkyport's, by name: `#resources`, a region's `image` and `pointer`, animation frames) stay loaded until the theme does.
 - **Port screenshots and QR codes** come from the ports, and there can be any number of them, so only the 30 most recently drawn are kept (more while a grid shows more). One a region still shows when it's dropped is loaded again for its next draw.
 
-So a big animation (many large frames) costs memory the whole time the theme is in use: keep frames small. (PortMaster before 2026.11 could drop a theme image that wasn't in `#resources` while a region still used it, and crash: list every image a theme uses there if it's meant for older PortMasters too.)
+So a big animation (many large frames) costs memory the whole time the theme is in use: keep frames small. (Volkyport before 2026.11 could drop a theme image that wasn't in `#resources` while a region still used it, and crash: list every image a theme uses there if it's meant for older Volkyports too.)
 
 ### 9-patch images
 
@@ -379,7 +379,7 @@ Stretching suits smooth edges and gradients, but not patterns or pixel art: a ro
 | `"edges"` | the four edges repeat; the middle stretches (a pattern along the border, a plain or gradient middle) |
 | `"all"` | the edges and the middle repeat (a texture all over) |
 
-The region's text and list go inside the patch's edges, then inside its `border`: a picture with wide edges (a decorated strip) leaves less room for text, so give boxes with text a picture with narrow ones. A box smaller than the picture shows part of each edge, rather than all of it squeezed. Repeated pieces join up only if the picture's edges are drawn to: each edge's middle should end the way it starts. PortMaster before 2026.11 stretches them.
+The region's text and list go inside the patch's edges, then inside its `border`: a picture with wide edges (a decorated strip) leaves less room for text, so give boxes with text a picture with narrow ones. A box smaller than the picture shows part of each edge, rather than all of it squeezed. Repeated pieces join up only if the picture's edges are drawn to: each edge's middle should end the way it starts. Volkyport before 2026.11 stretches them.
 
 ### QR codes
 
@@ -389,7 +389,7 @@ An `image` starting with `qr:` is a QR code of the text after it, which can use 
 
 ## Lists
 
-A region with a list (`option_list`, `ports_list`, `filter_list` …) gets its rows from PortMaster. The theme decides how they look:
+A region with a list (`option_list`, `ports_list`, `filter_list` …) gets its rows from Volkyport. The theme decides how they look:
 
 | Key | Default | |
 |---|---|---|
@@ -423,7 +423,7 @@ A pointer is an image drawn beside the selected row:
 
 | Key | Default | |
 |---|---|---|
-| `pointer` | | the image (list it in `#resources` for older PortMasters) |
+| `pointer` | | the image (list it in `#resources` for older Volkyports) |
 | `pointer-fit` | | `"row"`: the pointer is exactly a row tall, its width keeping the image's shape, at any font size and screen size |
 | `pointer-attach` | `text` | `text`: beside the row's text; `list`: beside the row, and the list's side padding is the pointer's width |
 | `pointer-align` | `[ "midright", "midleft" ]` | the point of the row it's attached to, and the point of the pointer that goes there |
@@ -468,7 +468,7 @@ A region tagged `button_bar` gets the buttons each screen offers ("A: Enter", "B
 
 | Key | Default | |
 |---|---|---|
-| `bar` | | the list (PortMaster fills in the button bar's) |
+| `bar` | | the list (Volkyport fills in the button bar's) |
 | `bar-space` | 4 | pixels between the items |
 | `bar-width` | | the smallest width an item takes |
 | `button-sound`, `button-sound-alt` (and `-volume`) | | sounds for A, and for the other buttons |
@@ -496,7 +496,7 @@ As images: `#resources` pieces with those names (the default theme cuts them out
 
 ### Buttons of your own
 
-A section's `#config` can give buttons other jobs on that screen. `port_info` has two: `"port_links"` (opens the port's links) and `"port_info_popup"` (opens the `port_info_popup` section, if the theme has one). A, B, X and Y are always PortMaster's.
+A section's `#config` can give buttons other jobs on that screen. `port_info` has two: `"port_links"` (opens the port's links) and `"port_info_popup"` (opens the `port_info_popup` section, if the theme has one). A, B, X and Y are always Volkyport's.
 
 ```json
     "port_info": {
@@ -507,7 +507,7 @@ A section's `#config` can give buttons other jobs on that screen. `port_info` ha
 
 ## Text templates
 
-`text`, `image` and `bar` items can use **tags** in braces, which PortMaster fills in and keeps up to date:
+`text`, `image` and `bar` items can use **tags** in braces, which Volkyport fills in and keeps up to date:
 
 ```json
     "text": "{port_info.title}"
@@ -515,7 +515,7 @@ A section's `#config` can give buttons other jobs on that screen. `port_info` ha
     "image": "menu_{menu.selected}.png"
 ```
 
-A tag PortMaster doesn't know shows as it's written, braces and all. `{{` is a plain `{`. [Tags](#tags) lists them all.
+A tag Volkyport doesn't know shows as it's written, braces and all. `{{` is a plain `{`. [Tags](#tags) lists them all.
 
 **Conditions** show text only when a tag has a value, or a particular one:
 
@@ -639,9 +639,9 @@ The default theme's Grid gives the ports list a wider pane (`grid_left`), and th
 
 ## Translations
 
-PortMaster is translated into many languages, and so is the text in themes: every `text` without tags (and the text around tags) is looked up in PortMaster's translations of themes' text, `PortMaster/pylibs/locales/<lang>.themes.json`. A theme's text is added to those when it's published in the theme repository.
+Volkyport is translated into many languages, and so is the text in themes: every `text` without tags (and the text around tags) is looked up in Volkyport's translations of themes' text, `Volkyport/pylibs/locales/<lang>.themes.json`. A theme's text is added to those when it's published in the theme repository.
 
-A theme can also carry translations of its own, which win over PortMaster's:
+A theme can also carry translations of its own, which win over Volkyport's:
 
 ```json
     "#translations": {
@@ -650,7 +650,7 @@ A theme can also carry translations of its own, which win over PortMaster's:
     }
 ```
 
-The theme server's **Translate** view is a translation editor for PortMaster's strings and every theme's text, with a preview of the screens each string is on.
+The theme server's **Translate** view is a translation editor for Volkyport's strings and every theme's text, with a preview of the screens each string is on.
 
 ## Sounds and music
 
@@ -699,7 +699,7 @@ Each frame is an image that stays loaded with the theme: keep them few and small
 
 ## The screens
 
-Every screen is a section of `theme.json`. A theme needs these seven, or PortMaster can't open those screens:
+Every screen is a section of `theme.json`. A theme needs these seven, or Volkyport can't open those screens:
 
 | Section | Screen | Needs a region called |
 |---|---|---|
@@ -724,9 +724,9 @@ These are made from the theme's other sections when it leaves them out:
 | `theme_server` | Options › Theme Editor | | `themes_list` |
 | `port_info_popup` | more about a port (a theme's own button opens it) | | not offered |
 
-A region's name is how PortMaster finds it. `"tag"` gives a region another name to be found by, so `"background_list": { "tag": "option_list", … }` is the menu, and `"tag": null` hides a region from PortMaster. `on_screen_keyboard` (region `keyboard`) is a screen PortMaster doesn't use. The selection lists (`selection_list`, `selection_list_description`, `selection_list_images` and `selection_list_description_images`, the dialogs that autoinstall and ports' own scripts show), the disclaimer and the warnings for unsupported systems always look the same, whatever the theme.
+A region's name is how Volkyport finds it. `"tag"` gives a region another name to be found by, so `"background_list": { "tag": "option_list", … }` is the menu, and `"tag": null` hides a region from Volkyport. `on_screen_keyboard` (region `keyboard`) is a screen Volkyport doesn't use. The selection lists (`selection_list`, `selection_list_description`, `selection_list_images` and `selection_list_description_images`, the dialogs that autoinstall and ports' own scripts show), the disclaimer and the warnings for unsupported systems always look the same, whatever the theme.
 
-Regions PortMaster looks for besides the required ones, on any screen:
+Regions Volkyport looks for besides the required ones, on any screen:
 
 - `button_bar`: the buttons for that screen (`bar`).
 - `progress_bar` on `message_window`: filled to how far a download has got.
@@ -760,7 +760,7 @@ A port's details, with Install (or Uninstall) on A. The same `port_info.*` tags 
 
 ### port_links
 
-The port's page on the PortMaster website and the stores in its `port.json`, each as a QR code. The list is the region `links_list`; the selected link is in `{port_links.name}` ("Steam", "itch.io", "PortMaster website" …), `{port_links.url}` and `{port_links.kind}` (`website`, `store` or `developer`), and `{port_links.count}` is how many there are. Show the code with `"image": "qr:{port_links.url}"`. A theme without this section gets one made from its `themes_list`: its list, the QR code where the theme's screenshot goes and the address where its description goes.
+The port's page on the Volkyport website and the stores in its `port.json`, each as a QR code. The list is the region `links_list`; the selected link is in `{port_links.name}` ("Steam", "itch.io", "Volkyport website" …), `{port_links.url}` and `{port_links.kind}` (`website`, `store` or `developer`), and `{port_links.count}` is how many there are. Show the code with `"image": "qr:{port_links.url}"`. A theme without this section gets one made from its `themes_list`: its list, the QR code where the theme's screenshot goes and the address where its description goes.
 
 ### port_instructions
 
@@ -794,7 +794,7 @@ The runtimes (Mono, Godot, …), with `runtime_info.*`: its name, whether it's i
 
 ![message_window](docs/theme/screens/messages.png) ![message_box](docs/theme/screens/message_box.png)
 
-`message_window` shows what PortMaster is doing (`message_text` scrolls as messages arrive), with `{system.progress_text}`, `{system.progress_amount}` and a `progress_bar` while something downloads. `message_box` asks a question or says something went wrong: `message_text`, and the answers in the button bar.
+`message_window` shows what Volkyport is doing (`message_text` scrolls as messages arrive), with `{system.progress_text}`, `{system.progress_amount}` and a `progress_bar` while something downloads. `message_box` asks a question or says something went wrong: `message_text`, and the answers in the button bar.
 
 ![message_window's regions](docs/theme/regions/messages.png)
 
@@ -815,7 +815,7 @@ Every key a region can have. Types: *color* ([Colors](#colors)), *area* ([Areas]
 | `parent` | name | `root` | the element or region its area is in |
 | `z-index` | number | | drawing order: higher on top (otherwise the order in the section) |
 | `visible` | true/false | true | `false` hides it |
-| `tag` | name | its name | the name PortMaster finds it by; `null` for none |
+| `tag` | name | its name | the name Volkyport finds it by; `null` for none |
 | `style` | name or list | | the [style](#styles) it starts from |
 | `comment` | text | | a note, ignored |
 | **Box** | | | |
@@ -856,8 +856,8 @@ Every key a region can have. Types: *color* ([Colors](#colors)), *area* ([Areas]
 | `scrollable` | true/false | false | the player scrolls it with up and down |
 | `scroll-amount` | number | 1 | lines a press |
 | **List** | | | |
-| `list` | list | | its rows (PortMaster fills in its own lists) |
-| `options`, `info` | list | | the rows' ids and details (PortMaster's) |
+| `list` | list | | its rows (Volkyport fills in its own lists) |
+| `options`, `info` | list | | the rows' ids and details (Volkyport's) |
 | `item-size` | number | | a row's (or tile's) height in pixels |
 | `item-spacer` | number | 0 | pixels between rows or tiles |
 | `item-padding` | number | 4 | pixels inside a tile |
@@ -891,7 +891,7 @@ Every key a region can have. Types: *color* ([Colors](#colors)), *area* ([Areas]
 
 ## Tags
 
-Every tag PortMaster fills in. Sizes are text like "151.55 MB".
+Every tag Volkyport fills in. Sizes are text like "151.55 MB".
 
 | Tag | |
 |---|---|
@@ -904,7 +904,7 @@ Every tag PortMaster fills in. Sizes are text like "151.55 MB".
 | `system.free_space`, `system.used_space`, `system.total_space` | of the SD card the ports are on |
 | `system.device_name`, `system.cfw_name`, `system.cfw_version` | the device and its firmware |
 | `system.ip_address` | the device's address on the network |
-| `system.portmaster_version`, `system.harbourmaster_version` | |
+| `system.volkyport_version`, `system.harbourmaster_version` | |
 | **Progress** (while something downloads or installs) | |
 | `system.progress_text` | what it's doing |
 | `system.progress_amount` | how far, as text ("12.3 MB / 40.0 MB") |
@@ -950,7 +950,7 @@ Every tag PortMaster fills in. Sizes are text like "151.55 MB".
 
 ## The theme server
 
-The theme server draws every PortMaster screen with your theme, at any screen size, color scheme and language, and redraws when you save. It runs from a PortMaster-GUI checkout on Linux or macOS:
+The theme server draws every Volkyport screen with your theme, at any screen size, color scheme and language, and redraws when you save. It runs from a PortMaster-GUI checkout on Linux or macOS:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # once
@@ -961,11 +961,11 @@ Then open http://localhost:8090/. `--themes` is one theme folder (it has a `them
 
 ![Every screen with one theme](docs/theme/server-gallery.png)
 
-- **The screens:** every screen a theme draws, with the real ports list and screenshots (downloaded once into `~/.cache/portmaster-theme-server`; `--refresh-ports` gets the current ones), and the screens that always look the same.
+- **The screens:** every screen a theme draws, with the real ports list and screenshots (downloaded once into `~/.cache/volkyport-theme-server`; `--refresh-ports` gets the current ones), and the screens that always look the same.
 - **Region boxes:** draws each region's area with its name. Click a screen to see it big; hover over or click a box to see the region's final keys, after `#base`, styles, elements and capabilities. **Save PNG** saves it.
 - **One screen, every size:** one screen at every common resolution, to check your capability keys.
 - **Color scheme and layout:** choose them at the top, as a player does in Options (Layout is there when the theme has more than one).
-- A screen your theme has no section for says so. Errors PortMaster logged while drawing (a missing image, a bad color) are listed on it.
+- A screen your theme has no section for says so. Errors Volkyport logged while drawing (a missing image, a bad color) are listed on it.
 
 ![One screen at every size](docs/theme/server-sizes.png)
 
@@ -976,21 +976,21 @@ Then open http://localhost:8090/. `--themes` is one theme folder (it has a `them
 ![The editor](docs/theme/server-edit.png)
 
 - **Region boxes:** click one to jump to that region in `theme.json`; put the cursor in a region to light up its box.
-- **Suggestions** as you type (or Ctrl+Space): keys with their types, the values a key takes (alignments, your colors, styles, images, fonts, elements), `{tags}`, and `[capabilities]`. They come from PortMaster's own code, so they match what it accepts.
-- **Checks:** JSON mistakes in plain words (a missing comma, a comma before `}`, comments), keys PortMaster doesn't know (with "did you mean"), values of the wrong type, colors, styles, images and fonts that don't exist, and the errors PortMaster logged while drawing.
+- **Suggestions** as you type (or Ctrl+Space): keys with their types, the values a key takes (alignments, your colors, styles, images, fonts, elements), `{tags}`, and `[capabilities]`. They come from Volkyport's own code, so they match what it accepts.
+- **Checks:** JSON mistakes in plain words (a missing comma, a comma before `}`, comments), keys Volkyport doesn't know (with "did you mean"), values of the wrong type, colors, styles, images and fonts that don't exist, and the errors Volkyport logged while drawing.
 - **Saving:** Ctrl/⌘+S. The previous version is kept as `theme.json.bak`, and you're asked before overwriting a file that changed on disk.
 - **Tidy** gives the file even indents, keeping arrays of numbers on one line and numbers as you wrote them.
 - **A new theme:** **Copy to a new theme…** copies any theme (the built-in one can't be changed) under a new name.
 
 ### Translating
 
-**Translate** lists every string of PortMaster, and every theme's text, with a language's translation: filter by untranslated or problems, see the screens each string is on, and save into the language files.
+**Translate** lists every string of Volkyport, and every theme's text, with a language's translation: filter by untranslated or problems, see the screens each string is on, and save into the language files.
 
 ![The translation editor](docs/theme/server-translate.png)
 
 ### On a device
 
-**Options › Theme Editor** starts the same server on the device and shows its address as text and a QR code. Open it on a computer or phone on the same network: it previews the device's own themes and ports, and saves into `PortMaster/themes/`. Press B on the device to stop it. Anyone on the network can open it while it runs.
+**Options › Theme Editor** starts the same server on the device and shows its address as text and a QR code. Open it on a computer or phone on the same network: it previews the device's own themes and ports, and saves into `Volkyport/themes/`. Press B on the device to stop it. Anyone on the network can open it while it runs.
 
 ### Exporting and checking
 
@@ -1001,11 +1001,11 @@ Then open http://localhost:8090/. `--themes` is one theme folder (it has a `them
 
 writes `out/<theme>/<resolution>/<scheme>/<layout>/<language>/<screen>.png` (and a `.json` beside each listing its regions), then [checks the layout](#any-screen-size). `--resolutions all` is every common screen size. Without `--layouts` it draws only the theme's default layout, and leaves out the `<layout>` folder.
 
-## Older PortMasters
+## Older Volkyports
 
-Themes in the theme list are downloaded by PortMasters of every age. What newer PortMasters understand, and what an older one does with it:
+Themes in the theme list are downloaded by Volkyports of every age. What newer Volkyports understand, and what an older one does with it:
 
-| Since | Feature | An older PortMaster |
+| Since | Feature | An older Volkyport |
 |---|---|---|
 | 2026.11 | `"font-scale": "auto"` | doesn't load the theme: give a number first, then `"font-scale[font_scale_auto]": "auto"` |
 | 2026.11 | `font-override`, `line-height-scale` | ignores them: give `font[ja_JP]` & co in each region with its own font |
@@ -1016,7 +1016,7 @@ Themes in the theme list are downloaded by PortMasters of every age. What newer 
 | 2026.11 | `patch-repeat` | stretches the 9-patch's pieces |
 | 2026.11 | a 9-patch picture's `image-mod` (in `#resources`, or the region's) | draws it untinted |
 
-The `font_scale_auto` capability exists only in PortMasters that understand `"auto"`, and keys with a capability a PortMaster doesn't have are skipped, so this loads everywhere and uses `auto` where it can:
+The `font_scale_auto` capability exists only in Volkyports that understand `"auto"`, and keys with a capability a Volkyport doesn't have are skipped, so this loads everywhere and uses `auto` where it can:
 
 ```json
     "#base": {
