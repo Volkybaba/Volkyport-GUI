@@ -70,7 +70,10 @@ def download(file_name, file_url, md5_source=None, md5_result=None, callback=Non
         md5_result = [None]
 
     try:
-        r = requests.get(file_url, stream=True, timeout=(30, 10))
+        ## (connect, read) in seconds. The read timeout must be generous:
+        ## a handheld on WiFi stalls for seconds mid-download, and a 10 s
+        ## read timeout aborts big files (e.g. the 250 MB Mono runtime).
+        r = requests.get(file_url, stream=True, timeout=(30, 60))
 
         if r.status_code != 200:
             if callback is not None:
