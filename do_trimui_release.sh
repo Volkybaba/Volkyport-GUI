@@ -19,7 +19,7 @@ trap 'rm -rf "$BUILD_DIR"' EXIT
 cd "$BUILD_DIR"
 
 if [[ "${1:-}" == "stable" ]]; then
-  curl -fL -o version.json "https://github.com/Volkybaba/PortMaster-GUI/releases/latest/download/version.json"
+  curl -fL -o version.json "https://github.com/Volkybaba/Volkyport-GUI/releases/latest/download/version.json"
   curl -fL -o Volkyport.zip "$(jq -r '.stable.url' version.json)"
   VOLKYPORT_ZIP="$BUILD_DIR/Volkyport.zip"
 else

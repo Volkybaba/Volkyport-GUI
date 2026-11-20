@@ -9,7 +9,7 @@ VOLKYPORT_RELEASE_CHANNEL = 'developer'
 ## -- END VOLKYPORT INFO --
 
 VOLKYPORT_MIN_VERSION = '2025-02-17-0000'
-VOLKYPORT_RELEASE_URL = 'https://github.com/Volkybaba/PortMaster-GUI/releases/latest/download/'
+VOLKYPORT_RELEASE_URL = 'https://github.com/Volkybaba/Volkyport-GUI/releases/latest/download/'
 VOLKYPORT_RELEASE_VALUES = ('stable', 'beta', 'alpha')
 
 VOLKYPORT_UPDATE_FREQUENCY = (60 * 60 * 1)

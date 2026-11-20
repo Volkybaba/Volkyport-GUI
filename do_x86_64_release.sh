@@ -20,7 +20,7 @@ cd "$BUILD_DIR"
 
 case "${1:-}" in
   alpha|beta|stable)
-    curl -fL -o version.json "https://github.com/Volkybaba/PortMaster-GUI/releases/latest/download/version.json"
+    curl -fL -o version.json "https://github.com/Volkybaba/Volkyport-GUI/releases/latest/download/version.json"
     curl -fL -o Volkyport.zip "$(jq -r ".$1.url" version.json)"
     VOLKYPORT_ZIP="$BUILD_DIR/Volkyport.zip"
     ;;

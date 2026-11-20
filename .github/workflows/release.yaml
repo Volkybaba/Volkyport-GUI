@@ -41,7 +41,7 @@ jobs:
         run: |
             RELEASE_REPO="${{ secrets.RELEASE_REPO }}"
             if [[ -z "$RELEASE_REPO" ]]; then
-              RELEASE_REPO="PortMaster-GUI"
+              RELEASE_REPO="Volkyport-GUI"
             fi
             echo "RELEASE_REPO=$RELEASE_REPO" >> $GITHUB_OUTPUT
 

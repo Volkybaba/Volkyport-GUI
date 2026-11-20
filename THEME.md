@@ -950,7 +950,7 @@ Every tag Volkyport fills in. Sizes are text like "151.55 MB".
 
 ## The theme server
 
-The theme server draws every Volkyport screen with your theme, at any screen size, color scheme and language, and redraws when you save. It runs from a PortMaster-GUI checkout on Linux or macOS:
+The theme server draws every Volkyport screen with your theme, at any screen size, color scheme and language, and redraws when you save. It runs from a Volkyport-GUI checkout on Linux or macOS:
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt   # once

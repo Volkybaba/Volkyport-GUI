@@ -65,7 +65,7 @@ I want to thank everyone on the Volkyport crew who have helped, but a special th
 - [urllib3][urllib3]
 
 
-[Volkyport]: https://github.com/Volkybaba/PortMaster-GUI
+[Volkyport]: https://github.com/Volkybaba/Volkyport-GUI
 [GitHubRepoV1]: https://github.com/kloptops/harbourmaster/tree/main/tools
 
 [example_json]: https://github.com/kloptops/harbourmaster/blob/main/data/example.port.json
