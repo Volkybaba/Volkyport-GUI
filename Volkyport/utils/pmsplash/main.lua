@@ -175,7 +175,7 @@ end
 local function initializeText()
     local fontSize = 32 * scaleFactor  -- Scale font size dynamically based on scaleFactor
     text = {
-        content = "Your Ultimate Handheld Linux Port Manager",
+        content = "Volkyport",
         font = love.graphics.newFont("assets/Aero Matics Regular.ttf", fontSize),  -- Use scaled font size
         color = {0, 0, 0},  -- Default text color
         x = 0.5,  -- Horizontal position as percentage of screen width (centered)
