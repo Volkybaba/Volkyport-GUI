@@ -219,6 +219,8 @@
         "background": {
             "area": [ 0.0, 0.0, 1.0, 1.0 ],
             "fill": "background",
+            "image": "background.png",
+            "image-mode": "fit",
             "font-size": 36,
             "font-color": "text",
             "music": "main_menu_stock.ogg",
